@@ -1,0 +1,32 @@
+#!/usr/bin/env python3
+
+from __future__ import print_function
+import sys
+
+lines = sys.stdin.readlines()
+
+l1 = []
+l2 = []
+l3 = []
+l4 = []
+lemma = sys.argv[1]
+
+for line in lines:
+  num = line.split(':')[0]
+
+  if lemma == "uniqueness":
+      print(line)
+#       if ": ReceiverKeySimple" in line:
+#         l1.append(num)
+#       elif "senc(xsimple" in line or "senc(~xsimple" in line:
+#         l2.append(num)
+#       elif "KU( ~key" in line:s
+#         l3.append(num)
+
+#   else:
+#     exit(0)
+
+# ranked = l1 + l2 + l3
+
+# for i in ranked:
+#   print(i)

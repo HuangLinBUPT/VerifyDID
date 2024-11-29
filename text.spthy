@@ -1,0 +1,75 @@
+// lemma Executability:
+//   exists-trace
+//   "Ex Issuer 
+//       appidI 
+//       #t0
+//       userid lifeTime authCode #t1
+//       VCdata
+//       credential 
+//       Verifier appidV 
+//       payload ShowReq VP
+//       #t2 
+//       #t5 
+//       #tx 
+//       // #tz
+//       #t6 #t7 #t8 
+//       .
+//       LIssurerAuthCodeRequest(Issuer, appidI)@t0
+//     & LAuthCodeGenerate(userid, lifeTime, authCode)@t1
+//     & LMFGetAuthCode(Issuer, appidI, authCode)@t2
+//     & LCredentialIssurance(Issuer, appidI, VCdata)@tx
+//     // & JSAPIgenerate(VCdata)@tz
+//     & LSuperAppStoreVC(userid, VCdata, credential)@t5
+//     & LVerifierShowPreReq(Verifier, appidV, ShowReq)@t6
+//     & LHolderPresentVP(userid, appidV, VP)@t7
+//     & LPresentationVerify(Verifier, appidV, payload, VP)@t8
+//     & (not Ex #x. AdversaryActivity() @ #x)
+//     /* Selective disclosure */
+//     & (Ex pre D d. credential = <pre, D> & payload = <pre, d> & d << D)
+//     "
+
+
+lemma secrecyOfCredential[heuristic={secrecyOfCredential}]:
+    "All credential VC userid #i.
+        LSuperAppStoreVC(userid, VC, credential)@i 
+      ==>
+          not (Ex #j. K(credential)@j)
+      | ( Ex r #x. CompromisedDomain(r) @ #x)
+      /* The credential is constructed from a VC_data*/
+      | ( Ex #i #j #k #m appid data.
+							MaliciousProgram('importVC', appid)@i
+						& Issuer(appid)@m
+            & CompromiseTEE(userid)@j
+          	& LeakData(userid, data)@k ) 
+      | ( Ex #i #j #k #m appid ltk data.
+							MaliciousProgram('PresentVP', appid)@i
+						& Verifier(appid)@m
+            & Reaveal(appid, ltk)@j
+          	& LeakData(userid, data)@k ) 
+      | ( Ex #i #j #k appid ltk data.
+						  Issuer(appid)@i
+            & Reaveal(appid, ltk)@j
+          	& LeakData(userid, data)@k ) 
+      // | ( Ex #i #j data. 
+      //         CompromiseTEE(userid)@i
+      //       & LeakData(userid, data)@j ) 
+      // | ( Ex #i #j #k appid ltk data.    
+      //         Reaveal(appid, ltk)@i
+			// 			& Verifier(appid)@k
+      //       & LeakData(userid, data)@j )
+          "
+
+
+          lemma integrityOfVC:
+/* The property is formalize as an non-injective agreement */
+      "All #i userid data credential.
+        SuperAppVC(userid, data, credential)@i
+        ==>
+          ( Ex #j appid.
+              IssueVC(appid, credential)@j
+            & #j < #i) 
+        // | ( Ex appid ltk Issuer userid data #i #j #k. 
+        //       CompromisedDomain(Issuer)@i
+        //     & Reaveal(appid, ltk)@j
+        //     & LeakData(userid, data)@k ) 
+             "

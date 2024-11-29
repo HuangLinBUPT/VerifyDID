@@ -1,0 +1,67 @@
+/*
+ The model for TLS/HTTPS channel used in this work
+ is reused from https://github.com/soap-wg/soap-proofs/tree/main/src,
+*/
+
+
+
+/*=== HTTPS: TLS channel ===*/
+rule Domain:
+  []
+  -->
+  [ !Domain($Domain) ]
+
+rule DomainCompromise:
+  [ !Domain($Domain) ]
+  --[ CompromisedDomain($Domain)
+    , AdversaryActivity() ]->
+  [ !DomainCompromise($Domain) ]
+
+rule TLSClientOut[color=#FFFFFF]:
+  [ TLSClient_Out(method, ~sess, $Domain, msg), 
+    !Domain($Domain) ]
+  -->
+  [ !TLSClient(method, ~sess, $Domain, msg) ]
+
+rule TLSAdversaryClientOut[color=#FF6961]:
+  [ In(method), 
+    In(~sess), 
+    In(msg), 
+    !Domain($Domain) ]
+  --[AdversaryActivity()]->
+  [ !TLSClient(method, ~sess, $Domain, msg) ]
+
+rule TLSServerOut[color=#FFFFFF]:
+  [ TLSServer_Out(method, ~sess, $Domain, msg), 
+    !Domain($Domain) ]
+  -->
+  [ !TLSServer(method, ~sess, $Domain, msg) ]
+
+rule TLSAdversaryServerOut[color=#FF6961]:
+  [ In(method), 
+    In(~sess), 
+    In(msg), 
+    !DomainCompromise($Domain) ]
+  --[ AdversaryActivity() ]->
+  [ !TLSServer(method, ~sess, $Domain, msg) ]
+
+rule TLSClientToServer[color=#FFFFFF]:
+  [ !TLSClient(method, ~sess, $Domain, msg) ]
+  --[ TLSClientToServer(~sess, msg) ]->
+  [ TLSServer_In(method, ~sess, $Domain, msg) ]
+
+rule TLSClientToAdversaryServer[color=#FF6961]:
+  [ !TLSClient(method, ~sess, $Domain, msg)
+  , !DomainCompromise($Domain) ]
+  --[ AdversaryActivity() ]->
+  [ Out(msg), Out(~sess) ]
+
+rule TLSServerToClient[color=#FFFFFF]:
+  [ !TLSServer(method, ~sess, $Domain, msg) ]
+  --[ TLSServerToClient(~sess, msg) ]->
+  [ TLSClient_In(method, ~sess, $Domain, msg) ]
+
+rule TLSServerToAdversaryClient[color=#FF6961]:
+  [ In(~adversarySess), !TLSServer(method, ~adversarySess, $Domain, msg) ]
+  --[ AdversaryActivity() ]->
+  [ Out(msg) ]
