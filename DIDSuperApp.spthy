@@ -1,6 +1,5 @@
-theory DID_
+theory DID
 begin
-
 
 builtins: natural-numbers, multiset
 
@@ -48,13 +47,6 @@ rule Phone[color=#004225]:
  * mini-programs, web-based mobile applications, 
  * or Official Accounts, a unique OpenID is generated. */
 /*------------------------------------------- */
-
-/*We assume that there is only one SA in superApp.*/
-// restriction InstallOnce:
-// 	"All name1 name2 number1 number2 userid1 userid2 #i #j.
-// 		  InstallSuperApp(name1, number1, userid1)@i 
-//     & InstallSuperApp(name2, number2, userid2)@j 
-//     ==> #i = #j"
 
 rule InstallSuperAppClient[color=#A3C1AD]:
 	[	!Phone($UserName, $Number)
