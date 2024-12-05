@@ -30,6 +30,138 @@ restriction Substring:
 #include "./tactics"
 
 
+// tactic: exec
+// presort: s
+// prio:
+//   regex ".*St_MF_PresentReq.*\(.*"
+// prio:
+//   regex ".*TEELTK\(.*" 
+// prio:
+//   regex ".*MPK\(.*"
+// prio:
+//   regex ".*VC\(.*"
+// prio:
+//   regex ".*TLS.*_In\(.*"
+// prio:
+//   regex ".*St_MFAuthCode.*\(.*"
+// prio:
+//   regex ".*MF\(.*"
+// prio:
+//   regex ".*St_\(.*"
+// prio:
+//   regex ".*SuperAppClient\(.*"
+// // prio:
+// //   regex ".*SuperApp\(.*"
+// deprio: 
+//   regex".*⊏.*\+x.*"
+// deprio:
+//   regex".*⊏.*"
+
+
+// tactic: secrecy
+//   presort: s
+//   prio:
+//     regex ".*St_MF_PresentReq.*\(.*"
+//   prio:
+//     regex ".*TEELTK\(.*" 
+//   prio:
+//     regex ".*MPK\(.*"
+//   prio:
+//     regex ".*VC\(.*"
+//   // prio:
+//   //   regex ".*TLS.*_In\(.*"
+//   prio:
+//     regex ".*St_MFAuthCode.*\(.*"
+//   prio:
+//     regex ".*MF\(.*"
+//   prio:
+//     regex ".*St_\(.*"
+//   prio:
+//     regex ".*SuperAppClient\(.*"
+//   deprio:
+//     regex ".*TLS.*_In"
+//   // prio:
+//   //   regex ".*SuperApp\(.*"
+//   deprio: 
+//     regex".*⊏.*\+x.*"
+//   deprio:
+//     regex".*⊏.*"
+
+// tactic: executability
+// presort: s
+// prio:
+//     regex ".*MF\(.*"
+// prio:
+//     regex ".*St_\(.*"
+// prio:
+//     regex ".*TLSServer_In\(.*"
+// prio:
+//     regex ".*TLSClient_In\(.*"
+// prio:
+//     regex ".*MB\(.*" 
+// // prio:
+// //     regex ".*SuperApp\(.*"
+// deprio:
+//     regex ".*⊏.*\+x.*"
+// deprio:
+//     regex ".*⊏.*"
+// deprio:
+//     regex ".*SuperAppClient\(.*"
+// deprio:
+//     regex ".*SuperAppServer\(.*"
+
+
+
+
+// tactic: secrecyOfCredential
+// presort: s
+// prio:
+//     regex ".*!SuperApp\(.*"
+// prio:
+//     regex ".*MPK\(.*"
+// prio:
+//     regex ".*TEELTK\(.*"
+// prio:
+//     regex ".*DB\(.*"
+// prio:
+//     regex "∀.*"
+// prio:
+//     regex "!KU\( sign\(.*"
+// prio:
+//     regex "!KU\( ~envelope_key.*"
+// prio:
+//     regex "!KU\( ~k.*"
+
+// tactic: CodeSecrecy
+//     presort: s
+//     prio:
+//     regex "!KU\( ~authCode.*"
+//     // solve( !KU( ~adversarySess ) @ #vk.14 )
+
+// tactic: integrity
+//     presort: s
+//     prio:
+//         regex ".*!SuperApp\(.*"
+//     prio:
+//         regex ".*MPK\(.*"
+//     prio:
+//         regex ".*TEELTK\(.*"
+//     prio:
+//         regex ".*DB\(.*"
+//     prio:
+//         regex ".*MLTK\(.*"
+//     prio:
+//         regex ".*TEEPK\(.*"
+//     prio:
+//         regex ".*!JSAPI\(.*"
+//     prio:
+//         regex "!KU\( senc\(.*"
+//     prio:
+//         regex "!KU\( sign\(.*"
+//     prio:
+//         regex "!KU\( ~k.*"
+  
+
 
 
 /*=== Phone Initialization ===*/
@@ -548,7 +680,7 @@ lemma TokenSecrecy[reuse]:
 /* - The attack succeeds when the master keys of the   */
 /*   two verifiers are leaked.                         */
 /*******************************************************/
-lemma StrongSecrecyOfUseddata[reuse]:
+lemma HolderClaimsSecrecy[reuse]:
   "All #i userid d p.
       DataBase(userid, d, p)@i
     ==>
@@ -571,11 +703,28 @@ lemma StrongSecrecyOfUseddata[reuse]:
 
 
 
+// lemma risk1[reuse, heuristic={secrecy}, hide_lemma=StrongSecrecyOfUseddata]:
+//   "All #i userid d p.
+//       DataBase(userid, d, p)@i
+//     ==>
+//         not (Ex #k #j. KU(d)@j & KU(p)@k)
+//       /* C1: Some client of a TLS session is compromised. */
+//       | ( Ex r #x. CompromisedDomain(r) @ #x)
+//       /* C2: The claims is leaked directly from the database. */
+//       | ( Ex #i data. LeakData(userid, data)@ #i)
+//       /* C3: The credential is leaked during issuance, 
+//               this is a serval attack, which may be infeasible in practice */
+//       | ( Ex #i #j #m app.
+//             MaliciousProgram('importVC', app)@i
+//           & Issuer(app)@m
+//           & CompromiseTEE(userid)@j )"
+
+
 lemma risk1[reuse, heuristic={secrecy}, hide_lemma=StrongSecrecyOfUseddata]:
-  "All #i userid d p.
-      DataBase(userid, d, p)@i
+  "All credential VC userid #i.
+    LSuperAppStoreVC(userid, VC, credential)@i 
     ==>
-        not (Ex #k #j. KU(d)@j & KU(p)@k)
+        not (Ex #k. KU(credential)@k)
       /* C1: Some client of a TLS session is compromised. */
       | ( Ex r #x. CompromisedDomain(r) @ #x)
       /* C2: The claims is leaked directly from the database. */
@@ -586,6 +735,7 @@ lemma risk1[reuse, heuristic={secrecy}, hide_lemma=StrongSecrecyOfUseddata]:
             MaliciousProgram('importVC', app)@i
           & Issuer(app)@m
           & CompromiseTEE(userid)@j )"
+
 
 /* Need fixed */
 // lemma SecrecyOfsignJWT[reuse, hide_lemma=StrongSecrecyOfUseddata, heuristic={secrecyOfCredential}]:
@@ -688,12 +838,12 @@ lemma integrityOfVC[hide_lemma=NonInjectAuthVCIssurance, heuristic={integrity}]:
             | ( Ex appid ltk #i. Reaveal(appid, ltk)@i)"
 #endif
 
-lemma authenticationVP[]:
-  "All V appidV payload VP #i.
-    LPresentationVerify(V, appidV, payload, VP)@i
-    ==> 
-    Ex userid #j.
-      LHolderPresentVP(userid, appidV, VP)@j  & #j < #i"
+// lemma authenticationVP[]:
+//   "All V appidV payload VP #i.
+//     LPresentationVerify(V, appidV, payload, VP)@i
+//     ==> 
+//     Ex userid #j.
+//       LHolderPresentVP(userid, appidV, VP)@j  & #j < #i"
 
 
 #ifdef goal3
