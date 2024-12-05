@@ -28,139 +28,7 @@ restriction Substring:
 
 #include "./TLS.spthy"
 #include "./tactics"
-
-
-// tactic: exec
-// presort: s
-// prio:
-//   regex ".*St_MF_PresentReq.*\(.*"
-// prio:
-//   regex ".*TEELTK\(.*" 
-// prio:
-//   regex ".*MPK\(.*"
-// prio:
-//   regex ".*VC\(.*"
-// prio:
-//   regex ".*TLS.*_In\(.*"
-// prio:
-//   regex ".*St_MFAuthCode.*\(.*"
-// prio:
-//   regex ".*MF\(.*"
-// prio:
-//   regex ".*St_\(.*"
-// prio:
-//   regex ".*SuperAppClient\(.*"
-// // prio:
-// //   regex ".*SuperApp\(.*"
-// deprio: 
-//   regex".*⊏.*\+x.*"
-// deprio:
-//   regex".*⊏.*"
-
-
-// tactic: secrecy
-//   presort: s
-//   prio:
-//     regex ".*St_MF_PresentReq.*\(.*"
-//   prio:
-//     regex ".*TEELTK\(.*" 
-//   prio:
-//     regex ".*MPK\(.*"
-//   prio:
-//     regex ".*VC\(.*"
-//   // prio:
-//   //   regex ".*TLS.*_In\(.*"
-//   prio:
-//     regex ".*St_MFAuthCode.*\(.*"
-//   prio:
-//     regex ".*MF\(.*"
-//   prio:
-//     regex ".*St_\(.*"
-//   prio:
-//     regex ".*SuperAppClient\(.*"
-//   deprio:
-//     regex ".*TLS.*_In"
-//   // prio:
-//   //   regex ".*SuperApp\(.*"
-//   deprio: 
-//     regex".*⊏.*\+x.*"
-//   deprio:
-//     regex".*⊏.*"
-
-// tactic: executability
-// presort: s
-// prio:
-//     regex ".*MF\(.*"
-// prio:
-//     regex ".*St_\(.*"
-// prio:
-//     regex ".*TLSServer_In\(.*"
-// prio:
-//     regex ".*TLSClient_In\(.*"
-// prio:
-//     regex ".*MB\(.*" 
-// // prio:
-// //     regex ".*SuperApp\(.*"
-// deprio:
-//     regex ".*⊏.*\+x.*"
-// deprio:
-//     regex ".*⊏.*"
-// deprio:
-//     regex ".*SuperAppClient\(.*"
-// deprio:
-//     regex ".*SuperAppServer\(.*"
-
-
-
-
-// tactic: secrecyOfCredential
-// presort: s
-// prio:
-//     regex ".*!SuperApp\(.*"
-// prio:
-//     regex ".*MPK\(.*"
-// prio:
-//     regex ".*TEELTK\(.*"
-// prio:
-//     regex ".*DB\(.*"
-// prio:
-//     regex "∀.*"
-// prio:
-//     regex "!KU\( sign\(.*"
-// prio:
-//     regex "!KU\( ~envelope_key.*"
-// prio:
-//     regex "!KU\( ~k.*"
-
-// tactic: CodeSecrecy
-//     presort: s
-//     prio:
-//     regex "!KU\( ~authCode.*"
-//     // solve( !KU( ~adversarySess ) @ #vk.14 )
-
-// tactic: integrity
-//     presort: s
-//     prio:
-//         regex ".*!SuperApp\(.*"
-//     prio:
-//         regex ".*MPK\(.*"
-//     prio:
-//         regex ".*TEELTK\(.*"
-//     prio:
-//         regex ".*DB\(.*"
-//     prio:
-//         regex ".*MLTK\(.*"
-//     prio:
-//         regex ".*TEEPK\(.*"
-//     prio:
-//         regex ".*!JSAPI\(.*"
-//     prio:
-//         regex "!KU\( senc\(.*"
-//     prio:
-//         regex "!KU\( sign\(.*"
-//     prio:
-//         regex "!KU\( ~k.*"
-  
+ 
 
 
 
@@ -383,7 +251,7 @@ rule MBgetSentitiveData[color=#FDFD96]:
 /***************************************************
  * Here we make a similar abstraction as above.
  * We consider the transmit of VC from mini-program
- * to super app, without accouting for how the 
+ * to super app, without accounting for how the 
  * VC transmitted from the frontend to the backend.
  **************************************************/
 rule MBConstructCredential[color=#FDFD96]: 
@@ -485,7 +353,6 @@ rule SuperAppConstructVPwithDisclosure[color=#6495ED]:
   [ 
 		// St_MF_PresentReq($Verifier, sess, openid, appid, ~ShowReq)
 		JSAPI_In('RequestVP', appid, request_VP) 
-    // TLSServer_In('GET', sess, $Verifer, <'PresentationReq', appid, ~ShowReq>),
   ,	!SuperApp($UserName, $Number, userid)
 	,	!TEELTK($Holder, userid, skH)
 	,	!MPK($Verifier, appid, pkV)
@@ -511,12 +378,6 @@ restriction UniqueVP:
     & LHolderPresentVP(userid, app, VP2) @ #j 
   ==> #i = #j & VP1 = VP2"
 
-// restriction replayReq:
-//   "All userid appid VP1 VP2 #i #j.
-//     LHolderPresentVP(userid, appid, VP1)@i
-//   & LHolderPresentVP(userid, appid, VP2)@j
-//   ==> #i = #j
-// "
 
 rule MBVerifyPresentation[color=#F4C2C2]:
   let 
@@ -621,10 +482,7 @@ lemma Executability:
     & LVerifierShowPreReq(verifier, appV, ShowReq)@t5
     & LHolderPresentVP(userid, appV, VP)@t6
     & LPresentationVerify(verifier, appV, payload, VP)@t7
-    & (not Ex #x. AdversaryActivity() @ #x)
-    /* Selective disclosure */
-    // & (Ex prefix D d. cred = <prefix, D> & payload = <prefix, d> & d << D)
-    "
+    & (not Ex #x. AdversaryActivity() @ #x)"
 #endif
 
 
@@ -737,43 +595,6 @@ lemma risk1[reuse, heuristic={secrecy}, hide_lemma=StrongSecrecyOfUseddata]:
           & CompromiseTEE(userid)@j )"
 
 
-/* Need fixed */
-// lemma SecrecyOfsignJWT[reuse, hide_lemma=StrongSecrecyOfUseddata, heuristic={secrecyOfCredential}]:
-//   "All #i Issuer_signed_JWT.
-//       SignJWT(Issuer_signed_JWT) @ #i
-//     ==>
-//       not (Ex #j. KU(Issuer_signed_JWT)@j)
-//       /* C1: Some client of a TLS session is compromised. */
-//       // | ( Ex #i #j #m userid app.
-//       //       MaliciousProgram('importVC', app)@i
-//       //     & Issuer(app)@m
-//       | ( Ex #i userid. 
-//             CompromiseTEE(userid)@i ) 
-//       /* C2: The claims is leaked directly from the database. */
-//       | ( Ex #i app. 
-//             MaliciousProgram('PresentVP', app) @ #i )"
-
-
-// /* This is goal 1.1 */
-// lemma secrecyOfUseddata[reuse]:
-//   "All #i userid d p.
-//       DataBase(userid, d, p)@i
-//     ==>
-//         not ( (Ex #j. KU(d)@j) 
-//             | (Ex #j. KU(p)@j) )
-//       /* C1: Some client of a TLS session is compromised. */
-//       | ( Ex r #x. CompromisedDomain(r) @ #x)
-//       /* C2: The claims is leaked directly from the database. */
-//       | ( Ex #i data. LeakData(userid, data)@ #i)
-//       /* C3: The disclosure can be obtatined from a
-//        * credential presentation, if the corresponding
-//        * master key of mini-program is leaked. */
-//       | ( Ex #i #j #m appid ltk.
-//             MaliciousProgram('PresentVP', appid)@i
-//           & Verifier(appid)@m
-//           & Reaveal(appid, ltk)@j ) "
-
-
 
 /*======================================================================*/
 /*            Goal 1.2: Secrecy of Issuer Credential                    */
@@ -838,20 +659,14 @@ lemma integrityOfVC[hide_lemma=NonInjectAuthVCIssurance, heuristic={integrity}]:
             | ( Ex appid ltk #i. Reaveal(appid, ltk)@i)"
 #endif
 
-// lemma authenticationVP[]:
-//   "All V appidV payload VP #i.
-//     LPresentationVerify(V, appidV, payload, VP)@i
-//     ==> 
-//     Ex userid #j.
-//       LHolderPresentVP(userid, appidV, VP)@j  & #j < #i"
 
 
 #ifdef goal3
-/** Goal3 is satisfied as our assumption in this model:
+/** Goal3 is satisfied in this model, i.e., this is no replay attack of VP:
  * different verifier (with different appid) accept different VP
  * and there is only one time presentation.
  * which corresponds to restriction UniqueVP*/
-/** We can use informal method to analyze and get an replay attack,
+/* We can use informal method to analyze and get an replay attack,
  * but this lemma gives us an advice how we can prevent such attack*/
 lemma UniquenessOfRequest:
   "All VP appid #i.
