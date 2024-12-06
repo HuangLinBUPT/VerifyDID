@@ -342,9 +342,7 @@ rule SuperAppConstructVPwithDisclosure[color=#6495ED]:
       encryptedVP = senc(VP, ~envelope_key)
       Presentation = <encryptedVP, envelope_key_encrypted>
   in
-  [ 
-		// St_MF_PresentReq($Verifier, sess, openid, appid, ~ShowReq)
-		JSAPI_In('RequestVP', appid, request_VP) 
+  [ JSAPI_In('RequestVP', appid, request_VP) 
   ,	!SuperApp($UserName, $Number, userid)
 	,	!TEELTK($Holder, userid, skH)
 	,	!MPK($Verifier, appid, pkV)
@@ -363,12 +361,16 @@ restriction UniqueVPreqfrom:
   ==> #i = #j"
 
 
-/** may be multiple VP for a holder */
+/* A holder may possess multiple VP. */
+/* Fact `LHolderPresentVP` states that the holder
+ * `userid` presents a `VP` to the verifier `app`. 
+ * We assume that for a specific verifier, the VP is specific. */
 restriction UniqueVP:
   "All #i #j userid app VP1 VP2.
       LHolderPresentVP(userid, app, VP1) @ #i 
     & LHolderPresentVP(userid, app, VP2) @ #j 
   ==> #i = #j & VP1 = VP2"
+
 
 
 rule MBVerifyPresentation[color=#F4C2C2]:
@@ -405,11 +407,13 @@ lemma SourcesID[sources]:
 
 
 
-/* We assume that only one issuer, but the 
- * credential (VC） can be used to construct 
- * unbounded number of VP */
+/* We assume that only one issuer */
 /* We assume for the same appid ,there is only
  * on thread of verifier.
+ */
+/* A credential (VC） can be used to construct 
+ * unbounded number of VP. We do not restrict
+ * this feature.
  */
 restriction SingleIssuerVerifier:
   "( All appid1 appid2 #i #j.
@@ -417,12 +421,11 @@ restriction SingleIssuerVerifier:
     ==> #i = #j )
   & ( All appid #i #j.
     Verifier(appid)@i & Verifier(appid)@j
-    ==> #i = #j )
-  "
+    ==> #i = #j )"
+
 
 
 #ifdef exec
-
 restriction AuthCodeReqOnce:
   "All Issuer appid #i #j.
       LIssurerAuthCodeRequest(Issuer, appid)@i
@@ -436,11 +439,6 @@ restriction OnceConstructionVC:
   ==> #i = #j"
 
 
-// restriction OncePresentationReq:
-//   "All V1 V2 appid1 appid2 req1 req2 #i #j.
-//       LVerifierShowPreReq(V1, appid1, req1)@i 
-//     & LVerifierShowPreReq(V2, appid2, req2)@j 
-//     ==> #i = #j"
 
 /* Here is an abstract for non-replay in TLS  */
 restriction uniqueClientToServer:
@@ -660,7 +658,7 @@ lemma integrityOfVC[hide_lemma=NonInjectAuthVCIssurance, heuristic={integrity}]:
  * which corresponds to restriction UniqueVP*/
 /* We can use informal method to analyze and get an replay attack,
  * but this lemma gives us an advice how we can prevent such attack*/
-lemma UniquenessOfRequest:
+lemma UniquePass:
   "All VP appid #i.
         PassVerify(appid, VP)@i 
       ==>
