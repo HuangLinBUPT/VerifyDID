@@ -7,6 +7,6 @@
 --prove=HolderClaimsSecrecy
 ./batch-run.sh Goal2  --derivcheck-timeout=0  -D=integrity --prove=NonInjectAuthVCIssurance \
 --prove=integrityOfVC
-./batch-run.sh Goal3 --derivcheck-timeout=0 -D=goal3 --prove=UniquenessOfRequest
+./batch-run.sh Goal3 --derivcheck-timeout=0 -D=goal3 --prove=UniquePass
 ./batch-run.sh Goal5 --derivcheck-timeout=0 -D=goal5 --prove=SelectiveDisclosure \
 --prove=StrictSelectiveDisclosure
