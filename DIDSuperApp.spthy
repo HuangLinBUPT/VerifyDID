@@ -476,6 +476,7 @@ lemma Executability:
 #endif
 
 
+/* Goal 1*/
 #ifdef secrecy
 lemma SanityCheckCodeSecrcy:
   exists-trace
@@ -617,6 +618,7 @@ lemma secrecyOfCredential[heuristic={secrecyOfCredential}]:
 #endif
 
 
+/* Goal 2*/
 /** The Issuer should be legal, otherwise, VC is forgeable. */
 #ifdef integrity
 
@@ -640,20 +642,20 @@ lemma NonInjectAuthVCIssurance[reuse, heuristic={exec}]:
 
 lemma integrityOfVC[hide_lemma=NonInjectAuthVCIssurance, heuristic={integrity}]:
 /* The property is formalize as an non-injective agreement */
-      "All #i userid data credential.
-        SuperAppVC(userid, data, credential)@i
-        ==>
-          ( Ex #j appid.
-              IssueVC(appid, credential)@j
-            & #j < #i) 
-            | ( Ex appid ltk #i. Reaveal(appid, ltk)@i)"
+    "All #i userid data credential.
+      SuperAppVC(userid, data, credential)@i
+      ==>
+        ( Ex #j appid.
+            IssueVC(appid, credential)@j
+          & #j < #i) 
+          | ( Ex appid ltk #i. Reaveal(appid, ltk)@i)"
 #endif
 
 
 
 #ifdef goal3
 /** Goal3 is satisfied in this model, i.e., this is no replay attack of VP:
- * different verifier (with different appid) accept different VP
+ * Different verifier (with different appid) accept different VP
  * and there is only one time presentation.
  * which corresponds to restriction UniqueVP*/
 /* We can use informal method to analyze and get an replay attack,
@@ -685,7 +687,10 @@ lemma SelectiveDisclosure:
     & LPresentationVerify(verifier, appV, payload, VP)@j
     & (not Ex #x. AdversaryActivity() @ #x)
     ==>
-      (Ex prefix D d. cred = <prefix, D> & payload = <prefix, d> & d << D)"
+      (Ex prefix D d. 
+          cred = <prefix, D> 
+        & payload = <prefix, d> 
+        & d << D)"
 
 
 /* This is a stronger property, which rules that d is the 
