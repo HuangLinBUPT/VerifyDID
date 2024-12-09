@@ -16,7 +16,7 @@ brew install tamarin-prover/tap/tamarin-prover
 To reproduce the proofs from our manuscript, we provide a shell script batch-all.sh that will generate all proofs and the corresponding logs for each property.
 
 
-### Interactive Mode for Inspection\
+### Interactive Mode for Inspection
 
 To manually inspect the proof state, especially for risk analysis, use the following command:
 ```bash
