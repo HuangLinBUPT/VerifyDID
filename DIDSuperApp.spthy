@@ -132,7 +132,7 @@ rule RevealMiniProgramPrivKey[color=#E52B50]:
   [ !MLTK($A, appid, ltk)]
 --[ Reaveal(appid, ltk),
     AdversaryActivity() ]->
-  [ Out(ltk)  ]
+  [ Out(<appid, ltk>)  ]
 
 
 /*=== Oauth 2.0 authCode flow ===*/
@@ -276,7 +276,7 @@ rule Z_JSAPICompromised[color=#FF6961]:
   [ !JSAPI(NameAPI, id, msg) ]
   --[ MaliciousProgram(NameAPI, id)
     , AdversaryActivity() ]->
-  [ Out(msg) ]
+  [ Out(<id, msg>) ]
 
 rule AdversaryJSAPI_out[color=#FFFFFF]:
   [ In(NameAPI), In(id), In(msg) ]
@@ -346,13 +346,16 @@ rule SuperAppConstructVPwithDisclosure[color=#6495ED]:
   ,	!SuperApp($UserName, $Number, userid)
 	,	!TEELTK($Holder, userid, skH)
 	,	!MPK($Verifier, appid, pkV)
-	,	!VC(userid, credential),
-    Fr(~envelope_key) ]
+	,	!VC(userid, credential)
+  , Fr(~envelope_key) ]
 --[ LHolderPresentVP(userid, appid, VP)
   , Pair(credential, payload)
   , VPrequestFrom(appid)
-  , HolderPresent(userid, Presentation) ]->
-  [ JSAPI_Out('PresentVP', appid, Presentation) ]
+  , CredentialPresent($UserName, Presentation)
+  , HolderPresent(userid, Presentation) 
+  // , HolderPresent(userid, encryptedVP)
+ ]->
+  [ JSAPI_Out('PresentVP', appid, <$UserName, Presentation>) ]
 
 
 restriction UniqueVPreqfrom:
@@ -377,7 +380,7 @@ rule MBVerifyPresentation[color=#F4C2C2]:
   let 
       pkV = pk(skV)
       // digest = prefixHash ++ postfixHash
-			Issuer_signed_JWT = <digest, signature>
+	  Issuer_signed_JWT = <digest, signature>
       payload = <Issuer_signed_JWT, disclosure>
       VP = <payload, proof>
       envelope_key_encrypted = aenc(envelope_key, pkV)
@@ -385,7 +388,7 @@ rule MBVerifyPresentation[color=#F4C2C2]:
       Presentation = <encryptedVP, envelope_key_encrypted>
   in
   [ St_MF_PresentReq($Verifier, openid, appid)
-	,	JSAPI_In('PresentVP', appid, Presentation) 
+  , JSAPI_In('PresentVP', appid, <UserName, Presentation>) 
   ,	!MLTK($Verifier, appid, skV)
   ,	!MPK($Issuer, IssueID, pkI)
   ,	!TEEPK($Holder, userid, pkH)  ]
@@ -394,8 +397,12 @@ rule MBVerifyPresentation[color=#F4C2C2]:
   , Substring(hash(disclosure), digest)
     // Eq(hash(disclosure), prefixHash),
   , LPresentationVerify($Verifier, appid, payload, VP)
-  , PassVerify(appid, Presentation)  ]->
+  , GetRights(UserName)
+  , PassVerify(appid, Presentation) 
+  // , PassVerify(appid, encryptedVP) 
+]->
   [ ]
+
 
 
 lemma SourcesID[sources]:
@@ -477,7 +484,7 @@ lemma Executability:
 
 
 /* Goal 1*/
-#ifdef secrecy
+#ifdef goal1
 lemma SanityCheckCodeSecrcy:
   exists-trace
   "Ex r code #t1 #t2.
@@ -489,14 +496,14 @@ lemma SanityCheckTokensecrcy:
     IsToken(token) @ #t1 &  KU(token) @ #t2"
 
 
-lemma CodeSecrecy[reuse]:
+lemma CodeSecrecy[reuse, heuristic={CodeSecrecy}]:
   "All issuer code #t1 #t2.
         ( UseCode(issuer, code) @ #t1
         & KU(code) @ #t2  )
     ==> 
         (Ex #x. CompromisedDomain(issuer) @ #x)"
 
-lemma TokenSecrecy[reuse]:
+lemma TokenSecrecy[reuse, heuristic={TokenSecrecy}]:
     "All #i #j token. 
         IsToken(token)@i & KU(token)@j
       ==>
@@ -529,7 +536,7 @@ lemma TokenSecrecy[reuse]:
 /* - The attack succeeds when the master keys of the   */
 /*   two verifiers are leaked.                         */
 /*******************************************************/
-lemma HolderClaimsSecrecy[reuse]:
+lemma ClaimsSecrecy[reuse]:
   "All #i userid d p.
       DataBase(userid, d, p)@i
     ==>
@@ -552,24 +559,8 @@ lemma HolderClaimsSecrecy[reuse]:
 
 
 
-// lemma risk1[reuse, heuristic={secrecy}, hide_lemma=StrongSecrecyOfUseddata]:
-//   "All #i userid d p.
-//       DataBase(userid, d, p)@i
-//     ==>
-//         not (Ex #k #j. KU(d)@j & KU(p)@k)
-//       /* C1: Some client of a TLS session is compromised. */
-//       | ( Ex r #x. CompromisedDomain(r) @ #x)
-//       /* C2: The claims is leaked directly from the database. */
-//       | ( Ex #i data. LeakData(userid, data)@ #i)
-//       /* C3: The credential is leaked during issuance, 
-//               this is a serval attack, which may be infeasible in practice */
-//       | ( Ex #i #j #m app.
-//             MaliciousProgram('importVC', app)@i
-//           & Issuer(app)@m
-//           & CompromiseTEE(userid)@j )"
 
-
-lemma risk1[reuse, heuristic={secrecy}, hide_lemma=StrongSecrecyOfUseddata]:
+lemma risk1[reuse, heuristic={secrecy}, hide_lemma=ClaimsSecrecy]:
   "All credential VC userid #i.
     LSuperAppStoreVC(userid, VC, credential)@i 
     ==>
@@ -620,7 +611,7 @@ lemma secrecyOfCredential[heuristic={secrecyOfCredential}]:
 
 /* Goal 2*/
 /** The Issuer should be legal, otherwise, VC is forgeable. */
-#ifdef integrity
+#ifdef goal2
 
 lemma NonInjectAuthVCIssurance[reuse, heuristic={exec}]:
   "All #i userid data credential.
@@ -660,15 +651,38 @@ lemma integrityOfVC[hide_lemma=NonInjectAuthVCIssurance, heuristic={integrity}]:
  * which corresponds to restriction UniqueVP*/
 /* We can use informal method to analyze and get an replay attack,
  * but this lemma gives us an advice how we can prevent such attack*/
-lemma UniquePass:
+lemma UniquePass[heuristic={UniquePass}]:
   "All VP appid #i.
-        PassVerify(appid, VP)@i 
+        PassVerify(appid, VP)@i
       ==>
-      Ex userid #j. 
-        HolderPresent(userid, VP)@j & #j < #i
-      & not( Ex verifier #k. 
-          PassVerify(verifier, VP)@k & not( #k = #i ) )"
+        ( Ex userid #j. 
+            HolderPresent(userid, VP)@j & #j < #i
+          & not( Ex verifier #k. PassVerify(verifier, VP)@k & not( #k = #i ) ) )
+      | ( Ex userid #i. CompromiseTEE(userid)@i ) 
+      | ( Ex appid ltk #i. Reaveal(appid, ltk)@i) "
 
+#endif
+
+
+/*======================================================================*/
+/*                     Goal 4: Legal Presentaion                        */
+/*----------------------------------------------------------------------*/
+/*  The wallet used by the End-User to present the credentials is the   */
+/*  same wallet to which the credentials have been issued               */
+/*======================================================================*/
+
+
+/* This lemma is fasified, which corresponds to the risk3 in our manuscript */
+/* To recover the attack, we use UserName to represent the identity of the  */
+/* holder, who then get rights after passing the verification of credential */
+#ifdef goal4
+lemma LegalPresentation:
+  "All #i UserName. GetRights(UserName)@i 
+  ==>   (Ex #j VP. 
+         CredentialPresent(UserName, VP)@j & #j < #i)
+      | ( Ex r #x. CompromisedDomain(r) @ #x) 
+      | ( Ex userid #i. CompromiseTEE(userid)@i ) 
+      | ( Ex appid ltk #i. Reaveal(appid, ltk)@i) "
 #endif
 
 

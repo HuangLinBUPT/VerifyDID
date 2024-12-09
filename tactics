@@ -101,30 +101,61 @@ prio:
     regex "!KU\( ~k.*"
 
 tactic: CodeSecrecy
-    presort: s
-    prio:
-    regex "!KU\( ~authCode.*"
-    // solve( !KU( ~adversarySess ) @ #vk.14 )
+  presort: s
+  deprio: 
+      regex "!KU\( ~sess.*"
+
+
+tactic: TokenSecrecy
+presort: s
+prio: 
+      regex "!KU\( ~token.*"
+prio:
+      regex "!KU\( ~sess.*"
+prio:
+      regex "!KU\( ~AuthCode.*"
+prio:
+      regex "TLSServer.*"
+
+
 
 tactic: integrity
-    presort: s
-    prio:
-        regex ".*!SuperApp\(.*"
-    prio:
-        regex ".*MPK\(.*"
-    prio:
-        regex ".*TEELTK\(.*"
-    prio:
-        regex ".*DB\(.*"
-    prio:
-        regex ".*MLTK\(.*"
-    prio:
-        regex ".*TEEPK\(.*"
-    prio:
-        regex ".*!JSAPI\(.*"
-    prio:
-        regex "!KU\( senc\(.*"
-    prio:
-        regex "!KU\( sign\(.*"
-    prio:
-        regex "!KU\( ~k.*"
+  presort: s
+  prio:
+      regex ".*!SuperApp\(.*"
+  prio:
+      regex ".*MPK\(.*"
+  prio:
+      regex ".*TEELTK\(.*"
+  prio:
+      regex ".*DB\(.*"
+  prio:
+      regex ".*MLTK\(.*"
+  prio:
+      regex ".*TEEPK\(.*"
+  prio:
+      regex ".*!JSAPI\(.*"
+  prio:
+      regex "!KU\( senc\(.*"
+  prio:
+      regex "!KU\( sign\(.*"
+  prio:
+      regex "!KU\( ~k.*"
+
+
+tactic: UniquePass
+  presort: s
+  prio:
+      regex ".*St_MF_PresentReq.*\(.*"
+  prio:
+      regex ".*∥.*"
+  prio:
+      regex ".*MLTK\(.*"
+  prio:
+      regex "!KU\( ~envelope_key.*"
+  prio:
+      regex "!KU\( ~k.*"
+  prio:
+      regex "!KU\( aenc\(envelope_key.*"
+  prio:
+      regex "!KU\( senc\(.*"
