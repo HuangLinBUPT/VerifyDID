@@ -13,7 +13,7 @@ brew install tamarin-prover/tap/tamarin-prover
 ```
 
 ### Automated Proof with Tactic
-To reproduce the proofs from our manuscript, we provide a shell script batch-all.sh that will generate all proofs and the corresponding logs for each property.
+To reproduce the [proofs](https://github.com/zerrymore11/VerifyDID/tree/main/proofs) from our manuscript, we provide a shell script batch-all.sh that will generate all proofs and the corresponding logs for each property.
 
 
 ### Interactive Mode for Inspection
