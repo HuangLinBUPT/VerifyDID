@@ -1,0 +1,948 @@
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: >>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0:  (last(#i))  ∥ (∃ #h. (!KU( appid ) @ #h) ∧ (¬(last(#h))) ∧ (#h < #i))  ∥ (∃ #h. (Issuer( appid ) @ #h) ∧ ¬(last(#h)))
+1: TLSServer_In( 'GET', ~sess, $Issuer, <'userInfo', appid, 'req'>) ▶₀ #i
+2: !SuperApp( $UserName, $Number, userid ) ▶₁ #i
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: St_MF_PresentReq( $Verifier, openid, appid ) ▶₀ #i
+1: JSAPI_In( 'PresentVP', appid,          <UserName,            senc(<<<digest, sign(digest, x)>, disclosure>,                  sign(<<digest, sign(digest, x)>, disclosure>, x.1)>,                envelope_key),            aenc(envelope_key, pk(skV))>) ▶₁ #i
+2: !MLTK( $Verifier, appid, skV ) ▶₂ #i
+3: !MPK( $Issuer, IssueID, pk(x) ) ▶₃ #i
+4: !TEEPK( $Holder, userid, pk(x.1) ) ▶₄ #i
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+[Saturating Sources] Step 1/5
+[Saturating Sources] Step 2/5
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: TLSServer_In( 'GET', ~sess, $Issuer, <'userInfo', appid, 'req'>) ▶₀ #i
+1: !SuperApp( $UserName, $Number, userid ) ▶₁ #i
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+[Saturating Sources] Step 1/5
+[Saturating Sources] Step 2/5
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: JSAPI_In( 'PresentVP', ~appid,          <UserName,            senc(<<<digest, sign(digest, x)>, disclosure>,                  sign(<<digest, sign(digest, x)>, disclosure>, x.1)>,                envelope_key),            aenc(envelope_key, pk(skV))>) ▶₁ #i
+1: !MLTK( $Verifier, ~appid, skV ) ▶₂ #i
+2: !MPK( $Issuer, IssueID, pk(x) ) ▶₃ #i
+3: !TEEPK( $Holder, userid, pk(x.1) ) ▶₄ #i
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !MLTK( $Verifier, ~appid, skV ) ▶₂ #i
+1: !MPK( $Issuer, IssueID, pk(x) ) ▶₃ #i
+2: !TEEPK( $Holder, userid, pk(x.1) ) ▶₄ #i
+3: !JSAPI( 'PresentVP', ~appid,        <UserName,          senc(<<<digest, sign(digest, x)>, disclosure>,                sign(<<digest, sign(digest, x)>, disclosure>, x.1)>,              envelope_key),          aenc(envelope_key, pk(skV))>) ▶₀ #vr.4
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !MPK( $Issuer, IssueID, pk(x) ) ▶₃ #i
+1: !TEEPK( $Holder, userid, pk(x.1) ) ▶₄ #i
+2: !JSAPI( 'PresentVP', ~appid,        <UserName,          senc(<<<digest, sign(digest, x)>, disclosure>,                sign(<<digest, sign(digest, x)>, disclosure>, x.1)>,              envelope_key),          aenc(envelope_key, pk(~k))>) ▶₀ #vr.4
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !TEEPK( $Holder, userid, pk(x) ) ▶₄ #i
+1: !JSAPI( 'PresentVP', ~appid,        <UserName,          senc(<<<digest, sign(digest, ~k)>, disclosure>,                sign(<<digest, sign(digest, ~k)>, disclosure>, x)>,              envelope_key),          aenc(envelope_key, pk(~k.1))>) ▶₀ #vr.4
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !JSAPI( 'PresentVP', ~appid,        <UserName,          senc(<<<digest, sign(digest, ~k)>, disclosure>,                sign(<<digest, sign(digest, ~k)>, disclosure>, ~k.1)>,              envelope_key),          aenc(envelope_key, pk(~k.2))>) ▶₀ #vr.4
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !KU( ~appid ) @ #vk.1
+1: !KU( senc(<<<digest, sign(digest, ~k)>, disclosure>,            sign(<<digest, sign(digest, ~k)>, disclosure>, ~k.1)>,          envelope_key)) @ #vk.5
+2: !KU( aenc(envelope_key, pk(~k.2)) ) @ #vk.6
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !KU( senc(<<<digest, sign(digest, ~k)>, disclosure>,            sign(<<digest, sign(digest, ~k)>, disclosure>, ~k.1)>,          envelope_key)) @ #vk.5
+1: !KU( aenc(envelope_key, pk(~k.2)) ) @ #vk.6
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !KU( senc(<<<digest, sign(digest, ~k)>, disclosure>,            sign(<<digest, sign(digest, ~k)>, disclosure>, ~k.1)>,          envelope_key)) @ #vk.5
+1: !KU( aenc(envelope_key, pk(~k.2)) ) @ #vk.6
+2: !JSAPI( 'RequestVP', ~appid, request_VP ) ▶₀ #vr.12
+3: !JSAPI( 'importVC', ~appid.2,        <         senc(<(hash(~sensitiveData)++hash(~disclosure.1)),                sign((hash(~sensitiveData)++hash(~disclosure.1)), ~k.4)>,              envelope_key.2),          aenc(envelope_key.2, pk(~k.1))>) ▶₀ #vr.14
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !KU( senc(<<<digest, sign(digest, ~k)>, disclosure>,            sign(<<digest, sign(digest, ~k)>, disclosure>, ~k.1)>,          envelope_key)) @ #vk.5
+1: !KU( aenc(envelope_key, pk(~k.2)) ) @ #vk.6
+2: !JSAPI( 'RequestVP', ~appid, request_VP ) ▶₀ #vr.12
+3: !JSAPI( 'importVC', ~appid.2,        <         senc(<(hash(~sensitiveData)++hash(~disclosure.1)),                sign((hash(~sensitiveData)++hash(~disclosure.1)), ~k.4)>,              envelope_key.2),          aenc(envelope_key.2, pk(~k.1))>) ▶₀ #vr.14
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !KU( aenc(envelope_key, pk(~k.2)) ) @ #vk.6
+1: !KU( sign(digest, ~k) ) @ #vk.12
+2: !KU( sign(<<digest, sign(digest, ~k)>, disclosure>, ~k.1)) @ #vk.14
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !KU( aenc(~envelope_key, pk(~k.2)) ) @ #vk.6
+1: !JSAPI( 'RequestVP', ~appid.2, request_VP ) ▶₀ #vr.17
+2: !JSAPI( 'importVC', ~appid.1,        <         senc(<(hash(~disclosure)++hash(~sensitiveData)),                sign((hash(~disclosure)++hash(~sensitiveData)), ~k)>,              envelope_key.1),          aenc(envelope_key.1, pk(~k.1))>) ▶₀ #vr.20
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !KU( aenc(~envelope_key, pk(~k.2)) ) @ #vk.6
+1: !JSAPI( 'RequestVP', ~appid.2, request_VP ) ▶₀ #vr.17
+2: !JSAPI( 'importVC', ~appid.1,        <         senc(<(hash(~disclosure)++hash(~sensitiveData)),                sign((hash(~disclosure)++hash(~sensitiveData)), ~k)>,              envelope_key.1),          aenc(envelope_key.1, pk(~k.1))>) ▶₀ #vr.20
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !JSAPI( 'RequestVP', ~appid, request_VP ) ▶₀ #vr.17
+1: !JSAPI( 'importVC', ~appid.1,        <         senc(<(hash(~disclosure)++hash(~sensitiveData)),                sign((hash(~disclosure)++hash(~sensitiveData)), ~k)>,              envelope_key.1),          aenc(envelope_key.1, pk(~k.1))>) ▶₀ #vr.19
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !JSAPI( 'RequestVP', ~appid.2, request_VP ) ▶₀ #vr.17
+1: !JSAPI( 'importVC', ~appid.1,        <         senc(<(hash(~disclosure)++hash(~sensitiveData)),                sign((hash(~disclosure)++hash(~sensitiveData)), ~k)>,              envelope_key.1),          aenc(envelope_key.1, pk(~k.1))>) ▶₀ #vr.20
+2: !KU( ~envelope_key ) @ #vk.7
+3: !KU( pk(~k.2) ) @ #vk.8
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !JSAPI( 'importVC', ~appid.1,        <         senc(<(hash(~disclosure)++hash(~sensitiveData)),                sign((hash(~disclosure)++hash(~sensitiveData)), ~k)>,              envelope_key.1),          aenc(envelope_key.1, pk(~k.1))>) ▶₀ #vr.19
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !JSAPI( 'importVC', ~appid.1,        <         senc(<(hash(~disclosure)++hash(~sensitiveData)),                sign((hash(~disclosure)++hash(~sensitiveData)), ~k)>,              envelope_key.1),          aenc(envelope_key.1, pk(~k.1))>) ▶₀ #vr.19
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !KU( ~appid.1 ) @ #vk.10
+1: !KU( senc(<(hash(~disclosure)++hash(~sensitiveData)),            sign((hash(~disclosure)++hash(~sensitiveData)), ~k)>,          envelope_key.1)) @ #vk.12
+2: !KU( aenc(envelope_key.1, pk(~k.1)) ) @ #vk.13
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: TLSServer_In( 'GET', ~sess.2, $Issuer,              <'accessInfoReq', ~appid.1, ~token.1>) ▶₀ #vr.33
+1: TLSServer_In( 'POST', ~sess.3, $Issuer,              <'token_req', ~appid.1, ~authCode.1>) ▶₀ #vr.36
+2: TLSServer_In( 'POST', ~sess.5, $Issuer,              <'token_req', ~appid.1, ~authCode.2>) ▶₀ #vr.38
+3: TLSServer_In( 'GET', ~sess.4, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.39
+4: TLSServer_In( 'GET', ~sess.6, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.41
+5: TLSServer_In( 'GET', ~sess.7, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.42
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !KU( senc(<(hash(~disclosure)++hash(~sensitiveData)),            sign((hash(~disclosure)++hash(~sensitiveData)), ~k)>,          envelope_key.1)) @ #vk.12
+1: !KU( aenc(envelope_key.1, pk(~k.1)) ) @ #vk.13
+2: !KU( ~adversarySess ) @ #vk.14
+3: TLSServer_In( 'POST', ~adversarySess, $Domain,              <'token_req', ~appid.1, ~authCode>) ▶₀ #vr.25
+4: TLSServer_In( 'GET', ~sess.1, $Domain,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.29
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !KU( senc(<(hash(~disclosure)++hash(~sensitiveData)),            sign((hash(~disclosure)++hash(~sensitiveData)), ~k)>,          envelope_key.1)) @ #vk.12
+1: !KU( aenc(envelope_key.1, pk(~k.1)) ) @ #vk.13
+2: !KU( ~adversarySess ) @ #vk.14
+3: TLSServer_In( 'GET', ~adversarySess, $Domain,              <'accessInfoReq', ~appid.1, ~token>) ▶₀ #vr.25
+4: TLSServer_In( 'POST', ~sess.1, $Domain,              <'token_req', ~appid.1, ~authCode>) ▶₀ #vr.29
+5: TLSServer_In( 'GET', ~sess.2, $Domain,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.30
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !KU( senc(<(hash(~disclosure)++hash(~sensitiveData)),            sign((hash(~disclosure)++hash(~sensitiveData)), ~k)>,          envelope_key.1)) @ #vk.12
+1: !KU( aenc(envelope_key.1, pk(~k.1)) ) @ #vk.13
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !KU( senc(<(hash(~disclosure)++hash(~sensitiveData)),            sign((hash(~disclosure)++hash(~sensitiveData)), ~k)>,          envelope_key.1)) @ #vk.12
+1: !KU( aenc(envelope_key.1, pk(~k.1)) ) @ #vk.13
+2: TLSServer_In( 'GET', ~sess.2, $Issuer,              <'accessInfoReq', ~appid.1, ~token.1>) ▶₀ #vr.36
+3: TLSServer_In( 'POST', ~sess.3, $Issuer,              <'token_req', ~appid.1, ~authCode.1>) ▶₀ #vr.39
+4: TLSServer_In( 'POST', ~sess.5, $Issuer,              <'token_req', ~appid.1, ~authCode.2>) ▶₀ #vr.41
+5: TLSServer_In( 'GET', ~sess.4, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.42
+6: TLSServer_In( 'GET', ~sess.6, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.44
+7: TLSServer_In( 'GET', ~sess.7, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.45
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !KU( senc(<(hash(~disclosure)++hash(~sensitiveData)),            sign((hash(~disclosure)++hash(~sensitiveData)), ~k)>,          envelope_key.1)) @ #vk.12
+1: !KU( aenc(envelope_key.1, pk(~k.1)) ) @ #vk.13
+2: !JSAPI( 'RequestVP', ~appid.1, request_VP.1 ) ▶₀ #vr.27
+3: !JSAPI( 'importVC', ~appid.2,        <         senc(<(hash(~disclosure)++hash(~sensitiveData)),                sign((hash(~disclosure)++hash(~sensitiveData)), ~k.4)>,              envelope_key.3),          aenc(envelope_key.3, pk(~k.1))>) ▶₀ #vr.29
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !KU( senc(<(hash(~disclosure)++hash(~sensitiveData)),            sign((hash(~disclosure)++hash(~sensitiveData)), ~k)>,          envelope_key.1)) @ #vk.12
+1: !KU( aenc(envelope_key.1, pk(~k.1)) ) @ #vk.13
+2: !JSAPI( 'RequestVP', ~appid.1, request_VP.1 ) ▶₀ #vr.27
+3: !JSAPI( 'importVC', ~appid.2,        <         senc(<(hash(~disclosure)++hash(~sensitiveData)),                sign((hash(~disclosure)++hash(~sensitiveData)), ~k.4)>,              envelope_key.3),          aenc(envelope_key.3, pk(~k.1))>) ▶₀ #vr.29
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !KU( aenc(envelope_key.1, pk(~k.1)) ) @ #vk.13
+1: !KU( ~adversarySess ) @ #vk.14
+2: TLSServer_In( 'POST', ~adversarySess, $Domain,              <'token_req', ~appid, ~authCode>) ▶₀ #vr.25
+3: TLSServer_In( 'GET', ~sess.2, $Domain, <'userInfo', ~appid, 'req'>) ▶₀ #vr.29
+4: !KU( hash(~disclosure) ) @ #vk.19
+5: !KU( hash(~sensitiveData) ) @ #vk.20
+6: !KU( sign((hash(~disclosure)++hash(~sensitiveData)), ~k) ) @ #vk.21
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !KU( aenc(~envelope_key.1, pk(~k.1)) ) @ #vk.13
+1: !KU( ~adversarySess ) @ #vk.14
+2: TLSServer_In( 'POST', ~adversarySess, $Domain,              <'token_req', ~appid, ~authCode>) ▶₀ #vr.25
+3: TLSServer_In( 'GET', ~sess.2, $Domain, <'userInfo', ~appid, 'req'>) ▶₀ #vr.29
+4: TLSServer_In( 'GET', ~sess.4, $Issuer,              <'accessInfoReq', ~appid, ~token.2>) ▶₀ #vr.43
+5: TLSServer_In( 'POST', ~sess.5, $Issuer,              <'token_req', ~appid, ~authCode.2>) ▶₀ #vr.46
+6: TLSServer_In( 'POST', ~sess.6, $Issuer,              <'token_req', ~appid, ~authCode.3>) ▶₀ #vr.48
+7: TLSServer_In( 'GET', ~sess, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.49
+8: TLSServer_In( 'GET', ~sess.7, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.51
+9: TLSServer_In( 'GET', ~sess.8, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.52
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !KU( ~adversarySess ) @ #vk.14
+1: TLSServer_In( 'POST', ~adversarySess, $Domain,              <'token_req', ~appid, ~authCode>) ▶₀ #vr.25
+2: TLSServer_In( 'GET', ~sess.3, $Domain, <'userInfo', ~appid, 'req'>) ▶₀ #vr.29
+3: TLSServer_In( 'GET', ~sess.4, $Issuer,              <'accessInfoReq', ~appid, ~token.2>) ▶₀ #vr.43
+4: TLSServer_In( 'POST', ~sess.5, $Issuer,              <'token_req', ~appid, ~authCode.2>) ▶₀ #vr.46
+5: TLSServer_In( 'POST', ~sess.6, $Issuer,              <'token_req', ~appid, ~authCode.3>) ▶₀ #vr.48
+6: TLSServer_In( 'GET', ~sess, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.49
+7: TLSServer_In( 'GET', ~sess.7, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.51
+8: TLSServer_In( 'GET', ~sess.8, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.52
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !KU( ~adversarySess ) @ #vk.14
+1: TLSServer_In( 'POST', ~adversarySess, $Domain,              <'token_req', ~appid, ~authCode>) ▶₀ #vr.25
+2: TLSServer_In( 'GET', ~sess.3, $Domain, <'userInfo', ~appid, 'req'>) ▶₀ #vr.29
+3: TLSServer_In( 'GET', ~sess.4, $Issuer,              <'accessInfoReq', ~appid, ~token.2>) ▶₀ #vr.43
+4: TLSServer_In( 'POST', ~sess.5, $Issuer,              <'token_req', ~appid, ~authCode.2>) ▶₀ #vr.46
+5: TLSServer_In( 'POST', ~sess.6, $Issuer,              <'token_req', ~appid, ~authCode.3>) ▶₀ #vr.48
+6: TLSServer_In( 'GET', ~sess, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.49
+7: TLSServer_In( 'GET', ~sess.7, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.51
+8: TLSServer_In( 'GET', ~sess.8, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.52
+9: !KU( ~envelope_key.1 ) @ #vk.19
+10: !KU( pk(~k.1) ) @ #vk.20
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !KU( ~adversarySess ) @ #vk.14
+1: TLSServer_In( 'POST', ~adversarySess, $Domain,              <'token_req', ~appid, ~authCode>) ▶₀ #vr.25
+2: TLSServer_In( 'GET', ~sess.2, $Domain, <'userInfo', ~appid, 'req'>) ▶₀ #vr.29
+3: !KU( hash(~disclosure) ) @ #vk.19
+4: !KU( hash(~sensitiveData) ) @ #vk.20
+5: !KU( sign((hash(~disclosure)++hash(~sensitiveData)), ~k) ) @ #vk.21
+6: !KU( pk(~k.1) ) @ #vk.22
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: TLSServer_In( 'POST', ~adversarySess, $Domain,              <'token_req', ~appid, ~authCode>) ▶₀ #vr.25
+1: TLSServer_In( 'GET', ~sess.3, $Domain, <'userInfo', ~appid, 'req'>) ▶₀ #vr.29
+2: TLSServer_In( 'GET', ~sess.4, $Issuer,              <'accessInfoReq', ~appid, ~token.2>) ▶₀ #vr.43
+3: TLSServer_In( 'POST', ~sess.5, $Issuer,              <'token_req', ~appid, ~authCode.2>) ▶₀ #vr.46
+4: TLSServer_In( 'POST', ~sess.6, $Issuer,              <'token_req', ~appid, ~authCode.3>) ▶₀ #vr.48
+5: TLSServer_In( 'GET', ~sess, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.49
+6: TLSServer_In( 'GET', ~sess.7, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.51
+7: TLSServer_In( 'GET', ~sess.8, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.52
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: TLSServer_In( 'POST', ~adversarySess, $Domain,              <'token_req', ~appid, ~authCode>) ▶₀ #vr.25
+1: TLSServer_In( 'GET', ~sess.3, $Domain, <'userInfo', ~appid, 'req'>) ▶₀ #vr.29
+2: TLSServer_In( 'GET', ~sess.4, $Issuer,              <'accessInfoReq', ~appid, ~token.2>) ▶₀ #vr.43
+3: TLSServer_In( 'POST', ~sess.5, $Issuer,              <'token_req', ~appid, ~authCode.2>) ▶₀ #vr.46
+4: TLSServer_In( 'POST', ~sess.6, $Issuer,              <'token_req', ~appid, ~authCode.3>) ▶₀ #vr.48
+5: TLSServer_In( 'GET', ~sess, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.49
+6: TLSServer_In( 'GET', ~sess.7, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.51
+7: TLSServer_In( 'GET', ~sess.8, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.52
+8: !KU( ~adversarySess.1 ) @ #vk.19
+9: TLSServer_In( 'GET', ~adversarySess.1, $Domain.1,              <'accessInfoReq', appid.2, ~token.3>) ▶₀ #vr.56
+10: TLSServer_In( 'POST', ~sess.9, $Domain.1,              <'token_req', appid.2, ~authCode.4>) ▶₀ #vr.61
+11: TLSServer_In( 'GET', ~sess.10, $Domain.1,              <'userInfo', appid.2, 'req'>) ▶₀ #vr.62
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: TLSServer_In( 'POST', ~adversarySess, $Domain,              <'token_req', ~appid, ~authCode>) ▶₀ #vr.25
+1: TLSServer_In( 'GET', ~sess.3, $Domain, <'userInfo', ~appid, 'req'>) ▶₀ #vr.29
+2: TLSServer_In( 'GET', ~sess.4, $Issuer,              <'accessInfoReq', ~appid, ~token.2>) ▶₀ #vr.43
+3: TLSServer_In( 'POST', ~sess.5, $Issuer,              <'token_req', ~appid, ~authCode.2>) ▶₀ #vr.46
+4: TLSServer_In( 'POST', ~sess.6, $Issuer,              <'token_req', ~appid, ~authCode.3>) ▶₀ #vr.48
+5: TLSServer_In( 'GET', ~sess, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.49
+6: TLSServer_In( 'GET', ~sess.7, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.51
+7: TLSServer_In( 'GET', ~sess.8, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.52
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !KU( ~adversarySess ) @ #vk.14
+1: TLSServer_In( 'POST', ~adversarySess, $Domain,              <'token_req', ~appid, ~authCode>) ▶₀ #vr.25
+2: TLSServer_In( 'GET', ~sess.2, $Domain, <'userInfo', ~appid, 'req'>) ▶₀ #vr.29
+3: !KU( hash(~disclosure) ) @ #vk.19
+4: !KU( hash(~sensitiveData) ) @ #vk.20
+5: !KU( sign((hash(~disclosure)++hash(~sensitiveData)), ~k) ) @ #vk.21
+6: TLSServer_In( 'GET', ~sess.4, $Issuer,              <'accessInfoReq', ~appid, ~token.2>) ▶₀ #vr.43
+7: TLSServer_In( 'POST', ~sess.5, $Issuer,              <'token_req', ~appid, ~authCode.2>) ▶₀ #vr.46
+8: TLSServer_In( 'POST', ~sess.6, $Issuer,              <'token_req', ~appid, ~authCode.3>) ▶₀ #vr.48
+9: TLSServer_In( 'GET', ~sess, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.49
+10: TLSServer_In( 'GET', ~sess.7, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.51
+11: TLSServer_In( 'GET', ~sess.8, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.52
+12: !KU( ~envelope_key.1 ) @ #vk.17
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: TLSServer_In( 'POST', ~adversarySess, $Domain,              <'token_req', ~appid, ~authCode>) ▶₀ #vr.25
+1: TLSServer_In( 'GET', ~sess.3, $Domain, <'userInfo', ~appid, 'req'>) ▶₀ #vr.29
+2: TLSServer_In( 'GET', ~sess.4, $Issuer,              <'accessInfoReq', ~appid, ~token.2>) ▶₀ #vr.43
+3: TLSServer_In( 'POST', ~sess.5, $Issuer,              <'token_req', ~appid, ~authCode.2>) ▶₀ #vr.46
+4: TLSServer_In( 'POST', ~sess.6, $Issuer,              <'token_req', ~appid, ~authCode.3>) ▶₀ #vr.48
+5: TLSServer_In( 'GET', ~sess, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.49
+6: TLSServer_In( 'GET', ~sess.7, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.51
+7: TLSServer_In( 'GET', ~sess.8, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.52
+8: !KU( ~adversarySess.1 ) @ #vk.19
+9: TLSServer_In( 'POST', ~adversarySess.1, $Domain.1,              <'token_req', appid.2, ~authCode.4>) ▶₀ #vr.56
+10: TLSServer_In( 'GET', ~sess.9, $Domain.1,              <'userInfo', appid.2, 'req'>) ▶₀ #vr.60
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: TLSServer_In( 'POST', ~adversarySess, $Domain,              <'token_req', ~appid, ~authCode>) ▶₀ #vr.25
+1: TLSServer_In( 'GET', ~sess.3, $Domain, <'userInfo', ~appid, 'req'>) ▶₀ #vr.29
+2: TLSServer_In( 'GET', ~sess.4, $Issuer,              <'accessInfoReq', ~appid, ~token.2>) ▶₀ #vr.43
+3: TLSServer_In( 'POST', ~sess.5, $Issuer,              <'token_req', ~appid, ~authCode.2>) ▶₀ #vr.46
+4: TLSServer_In( 'POST', ~sess.6, $Issuer,              <'token_req', ~appid, ~authCode.3>) ▶₀ #vr.48
+5: TLSServer_In( 'GET', ~sess, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.49
+6: TLSServer_In( 'GET', ~sess.7, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.51
+7: TLSServer_In( 'GET', ~sess.8, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.52
+8: !KU( ~adversarySess.1 ) @ #vk.19
+9: TLSServer_In( 'GET', ~adversarySess.1, $Domain.1,              <'accessInfoReq', appid.2, ~token.3>) ▶₀ #vr.56
+10: TLSServer_In( 'POST', ~sess.9, $Domain.1,              <'token_req', appid.2, ~authCode.4>) ▶₀ #vr.61
+11: TLSServer_In( 'GET', ~sess.10, $Domain.1,              <'userInfo', appid.2, 'req'>) ▶₀ #vr.62
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !KU( aenc(envelope_key.1, pk(~k.1)) ) @ #vk.13
+1: !KU( ~adversarySess ) @ #vk.14
+2: TLSServer_In( 'GET', ~adversarySess, $Domain,              <'accessInfoReq', ~appid, ~token>) ▶₀ #vr.25
+3: TLSServer_In( 'POST', ~sess.2, $Domain,              <'token_req', ~appid, ~authCode>) ▶₀ #vr.29
+4: TLSServer_In( 'GET', ~sess.3, $Domain, <'userInfo', ~appid, 'req'>) ▶₀ #vr.30
+5: !KU( hash(~disclosure) ) @ #vk.19
+6: !KU( hash(~sensitiveData) ) @ #vk.20
+7: !KU( sign((hash(~disclosure)++hash(~sensitiveData)), ~k) ) @ #vk.21
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !KU( aenc(~envelope_key.1, pk(~k.1)) ) @ #vk.13
+1: !KU( ~adversarySess ) @ #vk.14
+2: TLSServer_In( 'GET', ~adversarySess, $Domain,              <'accessInfoReq', ~appid, ~token>) ▶₀ #vr.25
+3: TLSServer_In( 'POST', ~sess.2, $Domain,              <'token_req', ~appid, ~authCode>) ▶₀ #vr.29
+4: TLSServer_In( 'GET', ~sess.3, $Domain, <'userInfo', ~appid, 'req'>) ▶₀ #vr.30
+5: TLSServer_In( 'GET', ~sess.5, $Issuer,              <'accessInfoReq', ~appid, ~token.2>) ▶₀ #vr.44
+6: TLSServer_In( 'POST', ~sess.6, $Issuer,              <'token_req', ~appid, ~authCode.2>) ▶₀ #vr.47
+7: TLSServer_In( 'POST', ~sess.7, $Issuer,              <'token_req', ~appid, ~authCode.3>) ▶₀ #vr.49
+8: TLSServer_In( 'GET', ~sess, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.50
+9: TLSServer_In( 'GET', ~sess.8, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.52
+10: TLSServer_In( 'GET', ~sess.9, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.53
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: TLSServer_In( 'POST', ~adversarySess, $Domain,              <'token_req', ~appid, ~authCode>) ▶₀ #vr.25
+1: TLSServer_In( 'GET', ~sess.3, $Domain, <'userInfo', ~appid, 'req'>) ▶₀ #vr.29
+2: !KU( hash(~adversarySess) ) @ #vk.19
+3: !KU( hash(~sensitiveData) ) @ #vk.20
+4: !KU( sign((hash(~adversarySess)++hash(~sensitiveData)), ~k)) @ #vk.21
+5: TLSServer_In( 'GET', ~sess.4, $Issuer,              <'accessInfoReq', ~appid, ~token.2>) ▶₀ #vr.43
+6: TLSServer_In( 'POST', ~sess.5, $Issuer,              <'token_req', ~appid, ~authCode.2>) ▶₀ #vr.46
+7: TLSServer_In( 'POST', ~sess.6, $Issuer,              <'token_req', ~appid, ~authCode.3>) ▶₀ #vr.48
+8: TLSServer_In( 'GET', ~sess, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.49
+9: TLSServer_In( 'GET', ~sess.7, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.51
+10: TLSServer_In( 'GET', ~sess.8, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.52
+11: !KU( ~envelope_key.1 ) @ #vk.17
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: TLSServer_In( 'POST', ~adversarySess, $Domain,              <'token_req', ~appid, ~authCode>) ▶₀ #vr.25
+1: TLSServer_In( 'GET', ~sess.3, $Domain, <'userInfo', ~appid, 'req'>) ▶₀ #vr.29
+2: !KU( hash(~disclosure) ) @ #vk.19
+3: !KU( hash(~adversarySess) ) @ #vk.20
+4: !KU( sign((hash(~adversarySess)++hash(~disclosure)), ~k) ) @ #vk.21
+5: TLSServer_In( 'GET', ~sess.4, $Issuer,              <'accessInfoReq', ~appid, ~token.2>) ▶₀ #vr.43
+6: TLSServer_In( 'POST', ~sess.5, $Issuer,              <'token_req', ~appid, ~authCode.2>) ▶₀ #vr.46
+7: TLSServer_In( 'POST', ~sess.6, $Issuer,              <'token_req', ~appid, ~authCode.3>) ▶₀ #vr.48
+8: TLSServer_In( 'GET', ~sess, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.49
+9: TLSServer_In( 'GET', ~sess.7, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.51
+10: TLSServer_In( 'GET', ~sess.8, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.52
+11: !KU( ~envelope_key.1 ) @ #vk.17
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: TLSServer_In( 'POST', ~adversarySess, $Domain,              <'token_req', ~appid, ~authCode>) ▶₀ #vr.25
+1: TLSServer_In( 'GET', ~sess.3, $Domain, <'userInfo', ~appid, 'req'>) ▶₀ #vr.29
+2: !KU( hash(~disclosure) ) @ #vk.19
+3: !KU( hash(~sensitiveData) ) @ #vk.20
+4: !KU( sign((hash(~disclosure)++hash(~sensitiveData)), ~k) ) @ #vk.21
+5: TLSServer_In( 'GET', ~sess.4, $Issuer,              <'accessInfoReq', ~appid, ~token.2>) ▶₀ #vr.43
+6: TLSServer_In( 'POST', ~sess.5, $Issuer,              <'token_req', ~appid, ~authCode.2>) ▶₀ #vr.46
+7: TLSServer_In( 'POST', ~sess.6, $Issuer,              <'token_req', ~appid, ~authCode.3>) ▶₀ #vr.48
+8: TLSServer_In( 'GET', ~sess, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.49
+9: TLSServer_In( 'GET', ~sess.7, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.51
+10: TLSServer_In( 'GET', ~sess.8, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.52
+11: !KU( ~envelope_key.1 ) @ #vk.17
+12: !KU( ~adversarySess.1 ) @ #vk.25
+13: TLSServer_In( 'POST', ~adversarySess.1, $Domain.1,              <'token_req', appid.2, ~authCode.4>) ▶₀ #vr.55
+14: TLSServer_In( 'GET', ~sess.9, $Domain.1,              <'userInfo', appid.2, 'req'>) ▶₀ #vr.59
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !KU( ~adversarySess ) @ #vk.14
+1: TLSServer_In( 'GET', ~adversarySess, $Domain,              <'accessInfoReq', ~appid, ~token>) ▶₀ #vr.25
+2: TLSServer_In( 'POST', ~sess.3, $Domain,              <'token_req', ~appid, ~authCode>) ▶₀ #vr.29
+3: TLSServer_In( 'GET', ~sess.4, $Domain, <'userInfo', ~appid, 'req'>) ▶₀ #vr.30
+4: TLSServer_In( 'GET', ~sess.5, $Issuer,              <'accessInfoReq', ~appid, ~token.2>) ▶₀ #vr.44
+5: TLSServer_In( 'POST', ~sess.6, $Issuer,              <'token_req', ~appid, ~authCode.2>) ▶₀ #vr.47
+6: TLSServer_In( 'POST', ~sess.7, $Issuer,              <'token_req', ~appid, ~authCode.3>) ▶₀ #vr.49
+7: TLSServer_In( 'GET', ~sess, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.50
+8: TLSServer_In( 'GET', ~sess.8, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.52
+9: TLSServer_In( 'GET', ~sess.9, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.53
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !KU( ~adversarySess ) @ #vk.14
+1: TLSServer_In( 'GET', ~adversarySess, $Domain,              <'accessInfoReq', ~appid, ~token>) ▶₀ #vr.25
+2: TLSServer_In( 'POST', ~sess.3, $Domain,              <'token_req', ~appid, ~authCode>) ▶₀ #vr.29
+3: TLSServer_In( 'GET', ~sess.4, $Domain, <'userInfo', ~appid, 'req'>) ▶₀ #vr.30
+4: TLSServer_In( 'GET', ~sess.5, $Issuer,              <'accessInfoReq', ~appid, ~token.2>) ▶₀ #vr.44
+5: TLSServer_In( 'POST', ~sess.6, $Issuer,              <'token_req', ~appid, ~authCode.2>) ▶₀ #vr.47
+6: TLSServer_In( 'POST', ~sess.7, $Issuer,              <'token_req', ~appid, ~authCode.3>) ▶₀ #vr.49
+7: TLSServer_In( 'GET', ~sess, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.50
+8: TLSServer_In( 'GET', ~sess.8, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.52
+9: TLSServer_In( 'GET', ~sess.9, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.53
+10: !KU( ~envelope_key.1 ) @ #vk.19
+11: !KU( pk(~k.1) ) @ #vk.20
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !KU( ~adversarySess ) @ #vk.14
+1: TLSServer_In( 'GET', ~adversarySess, $Domain,              <'accessInfoReq', ~appid, ~token>) ▶₀ #vr.25
+2: TLSServer_In( 'POST', ~sess.2, $Domain,              <'token_req', ~appid, ~authCode>) ▶₀ #vr.29
+3: TLSServer_In( 'GET', ~sess.3, $Domain, <'userInfo', ~appid, 'req'>) ▶₀ #vr.30
+4: !KU( hash(~disclosure) ) @ #vk.19
+5: !KU( hash(~sensitiveData) ) @ #vk.20
+6: !KU( sign((hash(~disclosure)++hash(~sensitiveData)), ~k) ) @ #vk.21
+7: !KU( pk(~k.1) ) @ #vk.22
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !KU( ~adversarySess ) @ #vk.14
+1: TLSServer_In( 'GET', ~adversarySess, $Domain,              <'accessInfoReq', ~appid, ~token>) ▶₀ #vr.25
+2: TLSServer_In( 'POST', ~sess.2, $Domain,              <'token_req', ~appid, ~authCode>) ▶₀ #vr.29
+3: TLSServer_In( 'GET', ~sess.3, $Domain, <'userInfo', ~appid, 'req'>) ▶₀ #vr.30
+4: !KU( hash(~disclosure) ) @ #vk.19
+5: !KU( hash(~sensitiveData) ) @ #vk.20
+6: !KU( sign((hash(~disclosure)++hash(~sensitiveData)), ~k) ) @ #vk.21
+7: TLSServer_In( 'GET', ~sess.5, $Issuer,              <'accessInfoReq', ~appid, ~token.2>) ▶₀ #vr.44
+8: TLSServer_In( 'POST', ~sess.6, $Issuer,              <'token_req', ~appid, ~authCode.2>) ▶₀ #vr.47
+9: TLSServer_In( 'POST', ~sess.7, $Issuer,              <'token_req', ~appid, ~authCode.3>) ▶₀ #vr.49
+10: TLSServer_In( 'GET', ~sess, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.50
+11: TLSServer_In( 'GET', ~sess.8, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.52
+12: TLSServer_In( 'GET', ~sess.9, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.53
+13: !KU( ~envelope_key.1 ) @ #vk.17
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !KU( aenc(envelope_key.2, pk(~k.1)) ) @ #vk.13
+1: TLSServer_In( 'GET', ~sess.3, $Issuer,              <'accessInfoReq', ~appid.1, ~token.1>) ▶₀ #vr.36
+2: TLSServer_In( 'POST', ~sess.4, $Issuer,              <'token_req', ~appid.1, ~authCode.1>) ▶₀ #vr.39
+3: TLSServer_In( 'POST', ~sess.5, $Issuer,              <'token_req', ~appid.1, ~authCode.2>) ▶₀ #vr.41
+4: TLSServer_In( 'GET', ~sess.2, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.42
+5: TLSServer_In( 'GET', ~sess.6, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.44
+6: TLSServer_In( 'GET', ~sess.7, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.45
+7: !KU( hash(~disclosure) ) @ #vk.20
+8: !KU( hash(~sensitiveData) ) @ #vk.21
+9: !KU( sign((hash(~disclosure)++hash(~sensitiveData)), ~k) ) @ #vk.22
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !KU( aenc(~envelope_key.2, pk(~k.1)) ) @ #vk.13
+1: TLSServer_In( 'GET', ~sess.3, $Issuer,              <'accessInfoReq', ~appid.1, ~token.1>) ▶₀ #vr.36
+2: TLSServer_In( 'POST', ~sess.4, $Issuer,              <'token_req', ~appid.1, ~authCode.1>) ▶₀ #vr.39
+3: TLSServer_In( 'POST', ~sess.5, $Issuer,              <'token_req', ~appid.1, ~authCode.2>) ▶₀ #vr.41
+4: TLSServer_In( 'GET', ~sess.2, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.42
+5: TLSServer_In( 'GET', ~sess.6, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.44
+6: TLSServer_In( 'GET', ~sess.7, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.45
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: TLSServer_In( 'GET', ~sess.3, $Issuer,              <'accessInfoReq', ~appid.1, ~token.1>) ▶₀ #vr.36
+1: TLSServer_In( 'POST', ~sess.4, $Issuer,              <'token_req', ~appid.1, ~authCode.1>) ▶₀ #vr.39
+2: TLSServer_In( 'POST', ~sess.6, $Issuer,              <'token_req', ~appid.1, ~authCode.2>) ▶₀ #vr.41
+3: TLSServer_In( 'GET', ~sess.2, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.42
+4: TLSServer_In( 'GET', ~sess.7, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.44
+5: TLSServer_In( 'GET', ~sess.8, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.45
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: TLSServer_In( 'GET', ~sess.3, $Issuer,              <'accessInfoReq', ~appid.1, ~token.1>) ▶₀ #vr.36
+1: TLSServer_In( 'POST', ~sess.4, $Issuer,              <'token_req', ~appid.1, ~authCode.1>) ▶₀ #vr.39
+2: TLSServer_In( 'POST', ~sess.6, $Issuer,              <'token_req', ~appid.1, ~authCode.2>) ▶₀ #vr.41
+3: TLSServer_In( 'GET', ~sess.2, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.42
+4: TLSServer_In( 'GET', ~sess.7, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.44
+5: TLSServer_In( 'GET', ~sess.8, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.45
+6: !KU( ~envelope_key.2 ) @ #vk.17
+7: !KU( pk(~k.1) ) @ #vk.18
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: TLSServer_In( 'GET', ~sess.3, $Issuer,              <'accessInfoReq', ~appid.1, ~token.1>) ▶₀ #vr.36
+1: TLSServer_In( 'POST', ~sess.4, $Issuer,              <'token_req', ~appid.1, ~authCode.1>) ▶₀ #vr.39
+2: TLSServer_In( 'POST', ~sess.5, $Issuer,              <'token_req', ~appid.1, ~authCode.2>) ▶₀ #vr.41
+3: TLSServer_In( 'GET', ~sess.2, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.42
+4: TLSServer_In( 'GET', ~sess.6, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.44
+5: TLSServer_In( 'GET', ~sess.7, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.45
+6: !KU( hash(~disclosure) ) @ #vk.20
+7: !KU( hash(~sensitiveData) ) @ #vk.21
+8: !KU( sign((hash(~disclosure)++hash(~sensitiveData)), ~k) ) @ #vk.22
+9: !KU( ~envelope_key.2 ) @ #vk.18
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: TLSServer_In( 'GET', ~sess.3, $Issuer,              <'accessInfoReq', ~appid.1, ~token.1>) ▶₀ #vr.36
+1: TLSServer_In( 'POST', ~sess.4, $Issuer,              <'token_req', ~appid.1, ~authCode.1>) ▶₀ #vr.39
+2: TLSServer_In( 'POST', ~sess.5, $Issuer,              <'token_req', ~appid.1, ~authCode.2>) ▶₀ #vr.41
+3: TLSServer_In( 'GET', ~sess.2, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.42
+4: TLSServer_In( 'GET', ~sess.6, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.44
+5: TLSServer_In( 'GET', ~sess.7, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.45
+6: !KU( hash(~disclosure) ) @ #vk.20
+7: !KU( hash(~sensitiveData) ) @ #vk.21
+8: !KU( sign((hash(~disclosure)++hash(~sensitiveData)), ~k) ) @ #vk.22
+9: !KU( pk(~k.1) ) @ #vk.23
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !KU( aenc(envelope_key.1, pk(~k.1)) ) @ #vk.13
+1: !KU( hash(~disclosure) ) @ #vk.17
+2: !KU( hash(~sensitiveData) ) @ #vk.18
+3: !KU( sign((hash(~disclosure)++hash(~sensitiveData)), ~k) ) @ #vk.19
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !KU( hash(~disclosure) ) @ #vk.17
+1: !KU( hash(~sensitiveData) ) @ #vk.18
+2: !KU( sign((hash(~disclosure)++hash(~sensitiveData)), ~k) ) @ #vk.19
+3: !KU( pk(~k.1) ) @ #vk.20
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !KU( hash(~disclosure) ) @ #vk.17
+1: !KU( hash(~sensitiveData) ) @ #vk.18
+2: !KU( sign((hash(~disclosure)++hash(~sensitiveData)), ~k) ) @ #vk.19
+3: TLSServer_In( 'GET', ~sess.3, $Issuer.1,              <'accessInfoReq', ~appid.2, ~token.1>) ▶₀ #vr.42
+4: TLSServer_In( 'POST', ~sess.4, $Issuer.1,              <'token_req', ~appid.2, ~authCode.1>) ▶₀ #vr.45
+5: TLSServer_In( 'POST', ~sess.6, $Issuer.1,              <'token_req', ~appid.2, ~authCode.2>) ▶₀ #vr.47
+6: TLSServer_In( 'GET', ~sess.5, $Issuer.1,              <'userInfo', ~appid.2, 'req'>) ▶₀ #vr.48
+7: TLSServer_In( 'GET', ~sess.7, $Issuer.1,              <'userInfo', ~appid.2, 'req'>) ▶₀ #vr.50
+8: TLSServer_In( 'GET', ~sess.8, $Issuer.1,              <'userInfo', ~appid.2, 'req'>) ▶₀ #vr.51
+9: !KU( ~envelope_key.1 ) @ #vk.15
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !KU( aenc(envelope_key.2, pk(~k.1)) ) @ #vk.13
+1: !JSAPI( 'RequestVP', ~appid.1, request_VP.1 ) ▶₀ #vr.27
+2: !JSAPI( 'importVC', ~appid.2,        <         senc(<(hash(~disclosure)++hash(~sensitiveData)),                sign((hash(~disclosure)++hash(~sensitiveData)), ~k.3)>,              envelope_key.3),          aenc(envelope_key.3, pk(~k.1))>) ▶₀ #vr.29
+3: !KU( hash(~disclosure) ) @ #vk.17
+4: !KU( hash(~sensitiveData) ) @ #vk.18
+5: !KU( sign((hash(~disclosure)++hash(~sensitiveData)), ~k) ) @ #vk.19
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !KU( aenc(~envelope_key.2, pk(~k.1)) ) @ #vk.13
+1: !JSAPI( 'RequestVP', ~appid.1, request_VP.1 ) ▶₀ #vr.27
+2: !JSAPI( 'importVC', ~appid.2,        <         senc(<(hash(~disclosure)++hash(~sensitiveData)),                sign((hash(~disclosure)++hash(~sensitiveData)), ~k.3)>,              envelope_key.3),          aenc(envelope_key.3, pk(~k.1))>) ▶₀ #vr.29
+3: TLSServer_In( 'GET', ~sess.2, $Issuer,              <'accessInfoReq', ~appid.1, ~token.1>) ▶₀ #vr.45
+4: TLSServer_In( 'POST', ~sess.3, $Issuer,              <'token_req', ~appid.1, ~authCode.1>) ▶₀ #vr.48
+5: TLSServer_In( 'POST', ~sess.5, $Issuer,              <'token_req', ~appid.1, ~authCode.2>) ▶₀ #vr.50
+6: TLSServer_In( 'GET', ~sess.4, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.51
+7: TLSServer_In( 'GET', ~sess.6, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.53
+8: TLSServer_In( 'GET', ~sess.7, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.54
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !JSAPI( 'RequestVP', ~appid.1, request_VP.1 ) ▶₀ #vr.27
+1: !JSAPI( 'importVC', ~appid.2,        <         senc(<(hash(~disclosure)++hash(~sensitiveData)),                sign((hash(~disclosure)++hash(~sensitiveData)), ~k.3)>,              envelope_key.3),          aenc(envelope_key.3, pk(~k.1))>) ▶₀ #vr.29
+2: TLSServer_In( 'GET', ~sess.3, $Issuer,              <'accessInfoReq', ~appid.1, ~token.1>) ▶₀ #vr.45
+3: TLSServer_In( 'POST', ~sess.4, $Issuer,              <'token_req', ~appid.1, ~authCode.1>) ▶₀ #vr.48
+4: TLSServer_In( 'POST', ~sess.5, $Issuer,              <'token_req', ~appid.1, ~authCode.2>) ▶₀ #vr.50
+5: TLSServer_In( 'GET', ~sess.2, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.51
+6: TLSServer_In( 'GET', ~sess.6, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.53
+7: TLSServer_In( 'GET', ~sess.7, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.54
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !JSAPI( 'RequestVP', ~appid.1, request_VP.1 ) ▶₀ #vr.27
+1: !JSAPI( 'importVC', ~appid.2,        <         senc(<(hash(~disclosure)++hash(~sensitiveData)),                sign((hash(~disclosure)++hash(~sensitiveData)), ~k.3)>,              envelope_key.3),          aenc(envelope_key.3, pk(~k.1))>) ▶₀ #vr.29
+2: TLSServer_In( 'GET', ~sess.3, $Issuer,              <'accessInfoReq', ~appid.1, ~token.1>) ▶₀ #vr.45
+3: TLSServer_In( 'POST', ~sess.4, $Issuer,              <'token_req', ~appid.1, ~authCode.1>) ▶₀ #vr.48
+4: TLSServer_In( 'POST', ~sess.5, $Issuer,              <'token_req', ~appid.1, ~authCode.2>) ▶₀ #vr.50
+5: TLSServer_In( 'GET', ~sess.2, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.51
+6: TLSServer_In( 'GET', ~sess.6, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.53
+7: TLSServer_In( 'GET', ~sess.7, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.54
+8: !KU( ~envelope_key.2 ) @ #vk.17
+9: !KU( pk(~k.1) ) @ #vk.18
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !JSAPI( 'RequestVP', ~appid.1, request_VP.1 ) ▶₀ #vr.27
+1: !JSAPI( 'importVC', ~appid.2,        <         senc(<(hash(~disclosure)++hash(~sensitiveData)),                sign((hash(~disclosure)++hash(~sensitiveData)), ~k.3)>,              envelope_key.3),          aenc(envelope_key.3, pk(~k.1))>) ▶₀ #vr.29
+2: !KU( hash(~disclosure) ) @ #vk.17
+3: !KU( hash(~sensitiveData) ) @ #vk.18
+4: !KU( sign((hash(~disclosure)++hash(~sensitiveData)), ~k) ) @ #vk.19
+5: !KU( pk(~k.1) ) @ #vk.20
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !JSAPI( 'RequestVP', ~appid.1, request_VP.1 ) ▶₀ #vr.27
+1: !JSAPI( 'importVC', ~appid.2,        <         senc(<(hash(~disclosure)++hash(~sensitiveData)),                sign((hash(~disclosure)++hash(~sensitiveData)), ~k.3)>,              envelope_key.3),          aenc(envelope_key.3, pk(~k.1))>) ▶₀ #vr.29
+2: !KU( hash(~disclosure) ) @ #vk.17
+3: !KU( hash(~sensitiveData) ) @ #vk.18
+4: !KU( sign((hash(~disclosure)++hash(~sensitiveData)), ~k) ) @ #vk.19
+5: TLSServer_In( 'GET', ~sess.2, $Issuer.2,              <'accessInfoReq', ~appid.3, ~token.1>) ▶₀ #vr.46
+6: TLSServer_In( 'POST', ~sess.3, $Issuer.2,              <'token_req', ~appid.3, ~authCode.1>) ▶₀ #vr.49
+7: TLSServer_In( 'POST', ~sess.5, $Issuer.2,              <'token_req', ~appid.3, ~authCode.2>) ▶₀ #vr.51
+8: TLSServer_In( 'GET', ~sess.4, $Issuer.2,              <'userInfo', ~appid.3, 'req'>) ▶₀ #vr.52
+9: TLSServer_In( 'GET', ~sess.6, $Issuer.2,              <'userInfo', ~appid.3, 'req'>) ▶₀ #vr.54
+10: TLSServer_In( 'GET', ~sess.7, $Issuer.2,              <'userInfo', ~appid.3, 'req'>) ▶₀ #vr.55
+11: !KU( ~envelope_key.2 ) @ #vk.15
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !KU( aenc(envelope_key.2, pk(~k.1)) ) @ #vk.13
+1: !JSAPI( 'RequestVP', ~appid.1, request_VP.1 ) ▶₀ #vr.27
+2: !JSAPI( 'importVC', ~appid.2,        <         senc(<(hash(~disclosure)++hash(~sensitiveData)),                sign((hash(~disclosure)++hash(~sensitiveData)), ~k.3)>,              envelope_key.3),          aenc(envelope_key.3, pk(~k.1))>) ▶₀ #vr.29
+3: !KU( hash(~disclosure) ) @ #vk.17
+4: !KU( hash(~sensitiveData) ) @ #vk.18
+5: !KU( sign((hash(~disclosure)++hash(~sensitiveData)), ~k) ) @ #vk.19
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !KU( aenc(~envelope_key.2, pk(~k.1)) ) @ #vk.13
+1: !JSAPI( 'RequestVP', ~appid.1, request_VP.1 ) ▶₀ #vr.27
+2: !JSAPI( 'importVC', ~appid.2,        <         senc(<(hash(~disclosure)++hash(~sensitiveData)),                sign((hash(~disclosure)++hash(~sensitiveData)), ~k.3)>,              envelope_key.3),          aenc(envelope_key.3, pk(~k.1))>) ▶₀ #vr.29
+3: TLSServer_In( 'GET', ~sess.2, $Issuer,              <'accessInfoReq', ~appid.1, ~token.1>) ▶₀ #vr.45
+4: TLSServer_In( 'POST', ~sess.3, $Issuer,              <'token_req', ~appid.1, ~authCode.1>) ▶₀ #vr.48
+5: TLSServer_In( 'POST', ~sess.5, $Issuer,              <'token_req', ~appid.1, ~authCode.2>) ▶₀ #vr.50
+6: TLSServer_In( 'GET', ~sess.4, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.51
+7: TLSServer_In( 'GET', ~sess.6, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.53
+8: TLSServer_In( 'GET', ~sess.7, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.54
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !JSAPI( 'RequestVP', ~appid.1, request_VP.1 ) ▶₀ #vr.27
+1: !JSAPI( 'importVC', ~appid.2,        <         senc(<(hash(~disclosure)++hash(~sensitiveData)),                sign((hash(~disclosure)++hash(~sensitiveData)), ~k.3)>,              envelope_key.3),          aenc(envelope_key.3, pk(~k.1))>) ▶₀ #vr.29
+2: TLSServer_In( 'GET', ~sess.3, $Issuer,              <'accessInfoReq', ~appid.1, ~token.1>) ▶₀ #vr.45
+3: TLSServer_In( 'POST', ~sess.4, $Issuer,              <'token_req', ~appid.1, ~authCode.1>) ▶₀ #vr.48
+4: TLSServer_In( 'POST', ~sess.5, $Issuer,              <'token_req', ~appid.1, ~authCode.2>) ▶₀ #vr.50
+5: TLSServer_In( 'GET', ~sess.2, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.51
+6: TLSServer_In( 'GET', ~sess.6, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.53
+7: TLSServer_In( 'GET', ~sess.7, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.54
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !JSAPI( 'RequestVP', ~appid.1, request_VP.1 ) ▶₀ #vr.27
+1: !JSAPI( 'importVC', ~appid.2,        <         senc(<(hash(~disclosure)++hash(~sensitiveData)),                sign((hash(~disclosure)++hash(~sensitiveData)), ~k.3)>,              envelope_key.3),          aenc(envelope_key.3, pk(~k.1))>) ▶₀ #vr.29
+2: TLSServer_In( 'GET', ~sess.3, $Issuer,              <'accessInfoReq', ~appid.1, ~token.1>) ▶₀ #vr.45
+3: TLSServer_In( 'POST', ~sess.4, $Issuer,              <'token_req', ~appid.1, ~authCode.1>) ▶₀ #vr.48
+4: TLSServer_In( 'POST', ~sess.5, $Issuer,              <'token_req', ~appid.1, ~authCode.2>) ▶₀ #vr.50
+5: TLSServer_In( 'GET', ~sess.2, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.51
+6: TLSServer_In( 'GET', ~sess.6, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.53
+7: TLSServer_In( 'GET', ~sess.7, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.54
+8: !KU( ~envelope_key.2 ) @ #vk.17
+9: !KU( pk(~k.1) ) @ #vk.18
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !JSAPI( 'RequestVP', ~appid.1, request_VP.1 ) ▶₀ #vr.27
+1: !JSAPI( 'importVC', ~appid.2,        <         senc(<(hash(~disclosure)++hash(~sensitiveData)),                sign((hash(~disclosure)++hash(~sensitiveData)), ~k.3)>,              envelope_key.3),          aenc(envelope_key.3, pk(~k.1))>) ▶₀ #vr.29
+2: !KU( hash(~disclosure) ) @ #vk.17
+3: !KU( hash(~sensitiveData) ) @ #vk.18
+4: !KU( sign((hash(~disclosure)++hash(~sensitiveData)), ~k) ) @ #vk.19
+5: !KU( pk(~k.1) ) @ #vk.20
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !JSAPI( 'RequestVP', ~appid.1, request_VP.1 ) ▶₀ #vr.27
+1: !JSAPI( 'importVC', ~appid.2,        <         senc(<(hash(~disclosure)++hash(~sensitiveData)),                sign((hash(~disclosure)++hash(~sensitiveData)), ~k.3)>,              envelope_key.3),          aenc(envelope_key.3, pk(~k.1))>) ▶₀ #vr.29
+2: !KU( hash(~disclosure) ) @ #vk.17
+3: !KU( hash(~sensitiveData) ) @ #vk.18
+4: !KU( sign((hash(~disclosure)++hash(~sensitiveData)), ~k) ) @ #vk.19
+5: TLSServer_In( 'GET', ~sess.2, $Issuer.2,              <'accessInfoReq', ~appid.3, ~token.1>) ▶₀ #vr.46
+6: TLSServer_In( 'POST', ~sess.3, $Issuer.2,              <'token_req', ~appid.3, ~authCode.1>) ▶₀ #vr.49
+7: TLSServer_In( 'POST', ~sess.5, $Issuer.2,              <'token_req', ~appid.3, ~authCode.2>) ▶₀ #vr.51
+8: TLSServer_In( 'GET', ~sess.4, $Issuer.2,              <'userInfo', ~appid.3, 'req'>) ▶₀ #vr.52
+9: TLSServer_In( 'GET', ~sess.6, $Issuer.2,              <'userInfo', ~appid.3, 'req'>) ▶₀ #vr.54
+10: TLSServer_In( 'GET', ~sess.7, $Issuer.2,              <'userInfo', ~appid.3, 'req'>) ▶₀ #vr.55
+11: !KU( ~envelope_key.2 ) @ #vk.15
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: TLSServer_In( 'POST', ~sess.3, $Issuer,              <'token_req', ~appid.1, ~authCode.1>) ▶₀ #vr.36
+1: TLSServer_In( 'GET', ~sess.2, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.38
+2: TLSServer_In( 'GET', ~sess.4, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.40
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: TLSServer_In( 'POST', ~sess.4, $Issuer,              <'token_req', ~appid.1, ~authCode.1>) ▶₀ #vr.36
+1: TLSServer_In( 'POST', ~sess.5, $Issuer,              <'token_req', ~appid.1, ~authCode.2>) ▶₀ #vr.38
+2: TLSServer_In( 'GET', ~sess.2, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.39
+3: TLSServer_In( 'GET', ~sess.6, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.41
+4: TLSServer_In( 'GET', ~sess.7, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.42
+5: !KU( ~sess.3 ) @ #vk.13
+6: !KU( ~appid.1 ) @ #vk.17
+7: !KU( ~token.1 ) @ #vk.18
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: TLSServer_In( 'GET', ~sess.2, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.38
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: TLSServer_In( 'GET', ~sess.2, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.38
+1: TLSServer_In( 'GET', ~sess.4, $Issuer,              <'userInfo', ~appid.1, 'req'>) ▶₀ #vr.40
+2: !KU( ~sess.3 ) @ #vk.12
+3: !KU( ~appid.1 ) @ #vk.16
+4: !KU( ~authCode.1 ) @ #vk.17
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+OK.
+
+==============================================================================
+summary of summaries:
+
+analyzed: DIDSuperApp.spthy
+
+  output:          Goal4.spthy
+  processing time: 33.40s
+  
+  SourcesID (all-traces): verified (9 steps)
+  LegalPresentation (all-traces): falsified - found trace (16 steps)
+
+==============================================================================

@@ -1,0 +1,339 @@
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: >>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0:  (last(#i))  ∥ (∃ #h. (!KU( appid ) @ #h) ∧ (¬(last(#h))) ∧ (#h < #i))  ∥ (∃ #h. (Issuer( appid ) @ #h) ∧ ¬(last(#h)))
+1: TLSServer_In( 'GET', ~sess, $Issuer, <'userInfo', appid, 'req'>) ▶₀ #i
+2: !SuperApp( $UserName, $Number, userid ) ▶₁ #i
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: St_MF_PresentReq( $Verifier, openid, appV ) ▶₀ #j
+1: JSAPI_In( 'PresentVP', appV,          <UserName,            senc(<<<digest, sign(digest, x)>, disclosure>,                  sign(<<digest, sign(digest, x)>, disclosure>, x.1)>,                envelope_key),            aenc(envelope_key, pk(skV))>) ▶₁ #j
+2: !MLTK( $Verifier, appV, skV ) ▶₂ #j
+3: !MPK( $Issuer, IssueID, pk(x) ) ▶₃ #j
+4: !TEEPK( $Holder, userid, pk(x.1) ) ▶₄ #j
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+[Saturating Sources] Step 1/5
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: JSAPI_In( 'importVC', appid,          <           senc(<(hash(disclosure)++hash(sensitiveData)),                  sign((hash(disclosure)++hash(sensitiveData)), x)>,                envelope_key),            aenc(envelope_key, pk(skH))>) ▶₀ #i
+1: !SuperApp( $UserName, $Number, userid ) ▶₁ #i
+2: !MPK( $Issuer, appid, pk(x) ) ▶₂ #i
+3: !TEELTK( $Holder, userid, skH ) ▶₃ #i
+4: !DB( userid, disclosure, sensitiveData ) ▶₄ #i
+5: St_MF_PresentReq( $Verifier, openid, appV ) ▶₀ #j
+6: JSAPI_In( 'PresentVP', appV,          <UserName.1,            senc(<<<digest, sign(digest, x.1)>, disclosure.1>,                  sign(<<digest, sign(digest, x.1)>, disclosure.1>, x.2)>,                envelope_key.1),            aenc(envelope_key.1, pk(skV))>) ▶₁ #j
+7: !MLTK( $Verifier, appV, skV ) ▶₂ #j
+8: !MPK( $Issuer.1, IssueID, pk(x.1) ) ▶₃ #j
+9: !TEEPK( $Holder.1, userid.1, pk(x.2) ) ▶₄ #j
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+[Saturating Sources] Step 2/5
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: TLSServer_In( 'GET', ~sess, $Issuer, <'userInfo', appid, 'req'>) ▶₀ #i
+1: !SuperApp( $UserName, $Number, userid ) ▶₁ #i
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+[Saturating Sources] Step 1/5
+[Saturating Sources] Step 2/5
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !SuperApp( $UserName, $Number, userid ) ▶₁ #i
+1: !MPK( $Issuer, appid, pk(x) ) ▶₂ #i
+2: !TEELTK( $Holder, userid, skH ) ▶₃ #i
+3: !DB( userid, disclosure, sensitiveData ) ▶₄ #i
+4: St_MF_PresentReq( $Verifier, openid, appV ) ▶₀ #j
+5: JSAPI_In( 'PresentVP', appV,          <UserName.1,            senc(<<<digest, sign(digest, x.1)>, disclosure.1>,                  sign(<<digest, sign(digest, x.1)>, disclosure.1>, x.2)>,                envelope_key.1),            aenc(envelope_key.1, pk(skV))>) ▶₁ #j
+6: !MLTK( $Verifier, appV, skV ) ▶₂ #j
+7: !MPK( $Issuer.1, IssueID, pk(x.1) ) ▶₃ #j
+8: !TEEPK( $Holder.1, userid.1, pk(x.2) ) ▶₄ #j
+9: !JSAPI( 'importVC', appid,        <         senc(<(hash(disclosure)++hash(sensitiveData)),                sign((hash(disclosure)++hash(sensitiveData)), x)>,              envelope_key),          aenc(envelope_key, pk(skH))>) ▶₀ #vr
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: JSAPI_In( 'PresentVP', ~appid,          <UserName,            senc(<<<digest, sign(digest, x)>, disclosure>,                  sign(<<digest, sign(digest, x)>, disclosure>, x.1)>,                envelope_key),            aenc(envelope_key, pk(skV))>) ▶₁ #j
+1: !MLTK( $Verifier, ~appid, skV ) ▶₂ #j
+2: !MPK( $Issuer, IssueID, pk(x) ) ▶₃ #j
+3: !TEEPK( $Holder, userid, pk(x.1) ) ▶₄ #j
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !MLTK( $Verifier, ~appid, skV ) ▶₂ #j
+1: !MPK( $Issuer, IssueID, pk(x) ) ▶₃ #j
+2: !TEEPK( $Holder, userid, pk(x.1) ) ▶₄ #j
+3: !JSAPI( 'PresentVP', ~appid,        <UserName,          senc(<<<digest, sign(digest, x)>, disclosure>,                sign(<<digest, sign(digest, x)>, disclosure>, x.1)>,              envelope_key),          aenc(envelope_key, pk(skV))>) ▶₀ #vr.4
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !MPK( $Issuer, appid, pk(x) ) ▶₂ #i
+1: !TEELTK( $Holder, ~userid, skH ) ▶₃ #i
+2: !DB( ~userid, disclosure, sensitiveData ) ▶₄ #i
+3: St_MF_PresentReq( $Verifier, openid, appV ) ▶₀ #j
+4: JSAPI_In( 'PresentVP', appV,          <UserName.1,            senc(<<<digest, sign(digest, x.1)>, disclosure.1>,                  sign(<<digest, sign(digest, x.1)>, disclosure.1>, x.2)>,                envelope_key.1),            aenc(envelope_key.1, pk(skV))>) ▶₁ #j
+5: !MLTK( $Verifier, appV, skV ) ▶₂ #j
+6: !MPK( $Issuer.1, IssueID, pk(x.1) ) ▶₃ #j
+7: !TEEPK( $Holder.1, userid.1, pk(x.2) ) ▶₄ #j
+8: !JSAPI( 'importVC', appid,        <         senc(<(hash(disclosure)++hash(sensitiveData)),                sign((hash(disclosure)++hash(sensitiveData)), x)>,              envelope_key),          aenc(envelope_key, pk(skH))>) ▶₀ #vr
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !MPK( $Issuer, IssueID, pk(x) ) ▶₃ #j
+1: !TEEPK( $Holder, userid, pk(x.1) ) ▶₄ #j
+2: !JSAPI( 'PresentVP', ~appid,        <UserName,          senc(<<<digest, sign(digest, x)>, disclosure>,                sign(<<digest, sign(digest, x)>, disclosure>, x.1)>,              envelope_key),          aenc(envelope_key, pk(~k))>) ▶₀ #vr.4
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !TEELTK( $Holder, ~userid, skH ) ▶₃ #i
+1: !DB( ~userid, disclosure, sensitiveData ) ▶₄ #i
+2: St_MF_PresentReq( $Verifier, openid, appV ) ▶₀ #j
+3: JSAPI_In( 'PresentVP', appV,          <UserName.1,            senc(<<<digest, sign(digest, x)>, disclosure.1>,                  sign(<<digest, sign(digest, x)>, disclosure.1>, x.1)>,                envelope_key.1),            aenc(envelope_key.1, pk(skV))>) ▶₁ #j
+4: !MLTK( $Verifier, appV, skV ) ▶₂ #j
+5: !MPK( $Issuer.1, IssueID, pk(x) ) ▶₃ #j
+6: !TEEPK( $Holder.1, userid.1, pk(x.1) ) ▶₄ #j
+7: !JSAPI( 'importVC', ~appid,        <         senc(<(hash(disclosure)++hash(sensitiveData)),                sign((hash(disclosure)++hash(sensitiveData)), ~k)>,              envelope_key),          aenc(envelope_key, pk(skH))>) ▶₀ #vr
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !TEEPK( $Holder, userid, pk(x) ) ▶₄ #j
+1: !JSAPI( 'PresentVP', ~appid,        <UserName,          senc(<<<digest, sign(digest, ~k)>, disclosure>,                sign(<<digest, sign(digest, ~k)>, disclosure>, x)>,              envelope_key),          aenc(envelope_key, pk(~k.1))>) ▶₀ #vr.4
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !DB( ~userid, disclosure, sensitiveData ) ▶₄ #i
+1: St_MF_PresentReq( $Verifier, openid, appV ) ▶₀ #j
+2: JSAPI_In( 'PresentVP', appV,          <UserName.1,            senc(<<<digest, sign(digest, x)>, disclosure.1>,                  sign(<<digest, sign(digest, x)>, disclosure.1>, x.1)>,                envelope_key.1),            aenc(envelope_key.1, pk(skV))>) ▶₁ #j
+3: !MLTK( $Verifier, appV, skV ) ▶₂ #j
+4: !MPK( $Issuer.1, IssueID, pk(x) ) ▶₃ #j
+5: !TEEPK( $Holder.1, userid.1, pk(x.1) ) ▶₄ #j
+6: !JSAPI( 'importVC', ~appid,        <         senc(<(hash(disclosure)++hash(sensitiveData)),                sign((hash(disclosure)++hash(sensitiveData)), ~k)>,              envelope_key),          aenc(envelope_key, pk(~k.1))>) ▶₀ #vr
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !JSAPI( 'PresentVP', ~appid,        <UserName,          senc(<<<digest, sign(digest, ~k)>, disclosure>,                sign(<<digest, sign(digest, ~k)>, disclosure>, ~k.1)>,              envelope_key),          aenc(envelope_key, pk(~k.2))>) ▶₀ #vr.4
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: St_MF_PresentReq( $Verifier, openid, appV ) ▶₀ #j
+1: JSAPI_In( 'PresentVP', appV,          <UserName.1,            senc(<<<digest, sign(digest, x)>, disclosure.1>,                  sign(<<digest, sign(digest, x)>, disclosure.1>, x.1)>,                envelope_key.1),            aenc(envelope_key.1, pk(skV))>) ▶₁ #j
+2: !MLTK( $Verifier, appV, skV ) ▶₂ #j
+3: !MPK( $Issuer.1, IssueID, pk(x) ) ▶₃ #j
+4: !TEEPK( $Holder.1, userid.1, pk(x.1) ) ▶₄ #j
+5: !JSAPI( 'importVC', ~appid,        <         senc(<(hash(~disclosure)++hash(~sensitiveData)),                sign((hash(~disclosure)++hash(~sensitiveData)), ~k)>,              envelope_key),          aenc(envelope_key, pk(~k.1))>) ▶₀ #vr
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: JSAPI_In( 'PresentVP', ~appid.1,          <UserName.1,            senc(<<<digest, sign(digest, x)>, disclosure.1>,                  sign(<<digest, sign(digest, x)>, disclosure.1>, x.1)>,                envelope_key.1),            aenc(envelope_key.1, pk(skV))>) ▶₁ #j
+1: !MLTK( $Verifier, ~appid.1, skV ) ▶₂ #j
+2: !MPK( $Issuer.1, IssueID, pk(x) ) ▶₃ #j
+3: !TEEPK( $Holder.1, userid.1, pk(x.1) ) ▶₄ #j
+4: !JSAPI( 'importVC', ~appid,        <         senc(<(hash(~disclosure)++hash(~sensitiveData)),                sign((hash(~disclosure)++hash(~sensitiveData)), ~k)>,              envelope_key),          aenc(envelope_key, pk(~k.1))>) ▶₀ #vr
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !MLTK( $Verifier, ~appid.1, skV ) ▶₂ #j
+1: !MPK( $Issuer.1, IssueID, pk(x) ) ▶₃ #j
+2: !TEEPK( $Holder.1, userid.1, pk(x.1) ) ▶₄ #j
+3: !JSAPI( 'importVC', ~appid,        <         senc(<(hash(~disclosure)++hash(~sensitiveData)),                sign((hash(~disclosure)++hash(~sensitiveData)), ~k)>,              envelope_key),          aenc(envelope_key, pk(~k.1))>) ▶₀ #vr
+4: !JSAPI( 'PresentVP', ~appid.1,        <UserName.1,          senc(<<<digest, sign(digest, x)>, disclosure.1>,                sign(<<digest, sign(digest, x)>, disclosure.1>, x.1)>,              envelope_key.1),          aenc(envelope_key.1, pk(skV))>) ▶₀ #vr.7
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !MPK( $Issuer.1, IssueID, pk(x) ) ▶₃ #j
+1: !TEEPK( $Holder.1, userid.1, pk(x.1) ) ▶₄ #j
+2: !JSAPI( 'importVC', ~appid,        <         senc(<(hash(~disclosure)++hash(~sensitiveData)),                sign((hash(~disclosure)++hash(~sensitiveData)), ~k)>,              envelope_key),          aenc(envelope_key, pk(~k.1))>) ▶₀ #vr
+3: !JSAPI( 'PresentVP', ~appid.1,        <UserName.1,          senc(<<<digest, sign(digest, x)>, disclosure.1>,                sign(<<digest, sign(digest, x)>, disclosure.1>, x.1)>,              envelope_key.1),          aenc(envelope_key.1, pk(~k.2))>) ▶₀ #vr.7
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !TEEPK( $Holder.1, userid.1, pk(x) ) ▶₄ #j
+1: !JSAPI( 'importVC', ~appid,        <         senc(<(hash(~disclosure)++hash(~sensitiveData)),                sign((hash(~disclosure)++hash(~sensitiveData)), ~k)>,              envelope_key),          aenc(envelope_key, pk(~k.1))>) ▶₀ #vr
+2: !JSAPI( 'PresentVP', ~appid.1,        <UserName.1,          senc(<<<digest, sign(digest, ~k.2)>, disclosure.1>,                sign(<<digest, sign(digest, ~k.2)>, disclosure.1>, x)>,              envelope_key.1),          aenc(envelope_key.1, pk(~k.3))>) ▶₀ #vr.7
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !JSAPI( 'importVC', ~appid,        <         senc(<(hash(~disclosure)++hash(~sensitiveData)),                sign((hash(~disclosure)++hash(~sensitiveData)), ~k)>,              envelope_key),          aenc(envelope_key, pk(~k.1))>) ▶₀ #vr
+1: !JSAPI( 'PresentVP', ~appid.1,        <UserName.1,          senc(<<<digest, sign(digest, ~k.2)>, disclosure.1>,                sign(<<digest, sign(digest, ~k.2)>, disclosure.1>, ~k.1)>,              envelope_key.1),          aenc(envelope_key.1, pk(~k.3))>) ▶₀ #vr.7
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !JSAPI( 'PresentVP', ~appid.1,        <UserName.1,          senc(<<<digest, sign(digest, ~k.2)>, disclosure.1>,                sign(<<digest, sign(digest, ~k.2)>, disclosure.1>, ~k.1)>,              envelope_key.1),          aenc(envelope_key.1, pk(~k.3))>) ▶₀ #vr.7
+1: TLSServer_In( 'GET', ~sess.2, $Issuer,              <'accessInfoReq', ~appid, ~token.1>) ▶₀ #vr.20
+2: TLSServer_In( 'POST', ~sess.3, $Issuer,              <'token_req', ~appid, ~authCode.1>) ▶₀ #vr.23
+3: TLSServer_In( 'POST', ~sess.5, $Issuer,              <'token_req', ~appid, ~authCode.2>) ▶₀ #vr.25
+4: TLSServer_In( 'GET', ~sess.4, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.26
+5: TLSServer_In( 'GET', ~sess.6, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.28
+6: TLSServer_In( 'GET', ~sess.7, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.29
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: TLSServer_In( 'GET', ~sess.2, $Issuer,              <'accessInfoReq', ~appid, ~token.1>) ▶₀ #vr.20
+1: TLSServer_In( 'POST', ~sess.3, $Issuer,              <'token_req', ~appid, ~authCode.1>) ▶₀ #vr.23
+2: TLSServer_In( 'POST', ~sess.5, $Issuer,              <'token_req', ~appid, ~authCode.2>) ▶₀ #vr.25
+3: TLSServer_In( 'GET', ~sess.4, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.26
+4: TLSServer_In( 'GET', ~sess.6, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.28
+5: TLSServer_In( 'GET', ~sess.7, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.29
+6: !JSAPI( 'RequestVP', ~appid.1, request_VP ) ▶₀ #vr.32
+7: !JSAPI( 'importVC', ~appid.2,        <         senc(<(hash(~disclosure)++hash(~sensitiveData)),                sign((hash(~disclosure)++hash(~sensitiveData)), ~k.2)>,              envelope_key.2),          aenc(envelope_key.2, pk(~k.1))>) ▶₀ #vr.34
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: TLSServer_In( 'GET', ~sess.2, $Issuer,              <'accessInfoReq', ~appid, ~token.1>) ▶₀ #vr.20
+1: TLSServer_In( 'POST', ~sess.3, $Issuer,              <'token_req', ~appid, ~authCode.1>) ▶₀ #vr.23
+2: TLSServer_In( 'POST', ~sess.5, $Issuer,              <'token_req', ~appid, ~authCode.2>) ▶₀ #vr.25
+3: TLSServer_In( 'GET', ~sess.4, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.26
+4: TLSServer_In( 'GET', ~sess.6, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.28
+5: TLSServer_In( 'GET', ~sess.7, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.29
+6: !JSAPI( 'RequestVP', ~appid.1, request_VP ) ▶₀ #vr.32
+7: !JSAPI( 'importVC', ~appid.2,        <         senc(<(hash(~disclosure)++hash(~sensitiveData)),                sign((hash(~disclosure)++hash(~sensitiveData)), ~k.2)>,              envelope_key.2),          aenc(envelope_key.2, pk(~k.1))>) ▶₀ #vr.34
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: TLSServer_In( 'POST', ~sess.2, $Issuer,              <'token_req', ~appid, ~authCode.1>) ▶₀ #vr.23
+1: TLSServer_In( 'GET', ~sess.3, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.25
+2: TLSServer_In( 'GET', ~sess.4, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.27
+3: !JSAPI( 'RequestVP', ~appid.1, request_VP ) ▶₀ #vr.30
+4: !JSAPI( 'importVC', ~appid.2,        <         senc(<(hash(~disclosure)++hash(~sensitiveData)),                sign((hash(~disclosure)++hash(~sensitiveData)), ~k.2)>,              envelope_key.2),          aenc(envelope_key.2, pk(~k.1))>) ▶₀ #vr.32
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: TLSServer_In( 'GET', ~sess.2, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.25
+1: !JSAPI( 'RequestVP', ~appid.1, request_VP ) ▶₀ #vr.29
+2: !JSAPI( 'importVC', ~appid.2,        <         senc(<(hash(~disclosure)++hash(~sensitiveData)),                sign((hash(~disclosure)++hash(~sensitiveData)), ~k.2)>,              envelope_key.2),          aenc(envelope_key.2, pk(~k.1))>) ▶₀ #vr.31
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: TLSServer_In( 'POST', ~sess.2, $Issuer,              <'token_req', ~appid, ~authCode.1>) ▶₀ #vr.23
+1: TLSServer_In( 'GET', ~sess.3, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.25
+2: TLSServer_In( 'GET', ~sess.4, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.27
+3: !JSAPI( 'RequestVP', ~appid.1, request_VP ) ▶₀ #vr.30
+4: !JSAPI( 'importVC', ~appid.2,        <         senc(<(hash(~disclosure)++hash(~sensitiveData)),                sign((hash(~disclosure)++hash(~sensitiveData)), ~k.2)>,              envelope_key.2),          aenc(envelope_key.2, pk(~k.1))>) ▶₀ #vr.32
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !JSAPI( 'RequestVP', ~appid.1, request_VP ) ▶₀ #vr.29
+1: !JSAPI( 'importVC', ~appid.2,        <         senc(<(hash(~disclosure)++hash(~sensitiveData)),                sign((hash(~disclosure)++hash(~sensitiveData)), ~k.2)>,              envelope_key.2),          aenc(envelope_key.2, pk(~k.1))>) ▶₀ #vr.31
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: TLSServer_In( 'GET', ~sess.2, $Issuer, <'userInfo', ~appid, 'req'>) ▶₀ #vr.25
+1: !JSAPI( 'RequestVP', ~appid.1, request_VP ) ▶₀ #vr.29
+2: !JSAPI( 'importVC', ~appid.2,        <         senc(<(hash(~disclosure)++hash(~sensitiveData)),                sign((hash(~disclosure)++hash(~sensitiveData)), ~k.2)>,              envelope_key.2),          aenc(envelope_key.2, pk(~k.1))>) ▶₀ #vr.31
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !JSAPI( 'importVC', ~appid.2,        <         senc(<(hash(~disclosure)++hash(~sensitiveData)),                sign((hash(~disclosure)++hash(~sensitiveData)), ~k.2)>,              envelope_key.2),          aenc(envelope_key.2, pk(~k.1))>) ▶₀ #vr.31
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !JSAPI( 'RequestVP', ~appid.1, request_VP ) ▶₀ #vr.29
+1: !JSAPI( 'importVC', ~appid.2,        <         senc(<(hash(~disclosure)++hash(~sensitiveData)),                sign((hash(~disclosure)++hash(~sensitiveData)), ~k.2)>,              envelope_key.2),          aenc(envelope_key.2, pk(~k.1))>) ▶₀ #vr.31
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+>>>>>>>>>>>>>>>>>>>>>>>> START INPUT
+0: !JSAPI( 'importVC', ~appid.2,        <         senc(<(hash(~disclosure)++hash(~sensitiveData)),                sign((hash(~disclosure)++hash(~sensitiveData)), ~k.2)>,              envelope_key.2),          aenc(envelope_key.2, pk(~k.1))>) ▶₀ #vr.31
+
+>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT
+
+>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call
+
+OK.
+
+==============================================================================
+summary of summaries:
+
+analyzed: DIDSuperApp.spthy
+
+  output:          Goal5.spthy
+  processing time: 12.47s
+  
+  SourcesID (all-traces): verified (9 steps)
+  SelectiveDisclosure (all-traces): verified (48 steps)
+  StrictSelectiveDisclosure (all-traces): verified (10 steps)
+
+==============================================================================

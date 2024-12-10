@@ -1,0 +1,1132 @@
+theory DID begin
+
+// Function signature and definition of the equational theory E
+
+builtins: multiset, natural-numbers
+functions: adec/2, aenc/2, checksign/3, fst/1, hash/1, maskedID/2,
+           pair/2, pk/1, sdec/2, senc/2, sign/2, snd/1, true/0
+equations:
+    adec(aenc(x, pk(k)), k) = x,
+    checksign(sign(m, k), m, pk(k)) = true,
+    fst(<x.1, x.2>) = x.1,
+    sdec(senc(x, k), k) = x,
+    snd(<x.1, x.2>) = x.2
+
+tactic: exec
+presort: s
+prio: {id}
+  regex".*St_MF_PresentReq.*\(.*"
+prio: {id}
+  regex".*TEELTK\(.*"
+prio: {id}
+  regex".*MPK\(.*"
+prio: {id}
+  regex".*VC\(.*"
+prio: {id}
+  regex".*TLS.*_In\(.*"
+prio: {id}
+  regex".*St_MFAuthCode.*\(.*"
+prio: {id}
+  regex".*MF\(.*"
+prio: {id}
+  regex".*St_\(.*"
+prio: {id}
+  regex".*SuperAppClient\(.*"
+deprio: {id}
+  regex".*⊏.*\+x.*"
+deprio: {id}
+  regex".*⊏.*"
+
+
+tactic: secrecy
+presort: s
+prio: {id}
+  regex".*St_MF_PresentReq.*\(.*"
+prio: {id}
+  regex".*TEELTK\(.*"
+prio: {id}
+  regex".*MPK\(.*"
+prio: {id}
+  regex".*VC\(.*"
+prio: {id}
+  regex".*St_MFAuthCode.*\(.*"
+prio: {id}
+  regex".*MF\(.*"
+prio: {id}
+  regex".*St_\(.*"
+prio: {id}
+  regex".*SuperAppClient\(.*"
+deprio: {id}
+  regex".*TLS.*_In"
+deprio: {id}
+  regex".*⊏.*\+x.*"
+deprio: {id}
+  regex".*⊏.*"
+
+
+tactic: executability
+presort: s
+prio: {id}
+  regex".*MF\(.*"
+prio: {id}
+  regex".*St_\(.*"
+prio: {id}
+  regex".*TLSServer_In\(.*"
+prio: {id}
+  regex".*TLSClient_In\(.*"
+prio: {id}
+  regex".*MB\(.*"
+deprio: {id}
+  regex".*⊏.*\+x.*"
+deprio: {id}
+  regex".*⊏.*"
+deprio: {id}
+  regex".*SuperAppClient\(.*"
+deprio: {id}
+  regex".*SuperAppServer\(.*"
+
+
+tactic: secrecyOfCredential
+presort: s
+prio: {id}
+  regex".*!SuperApp\(.*"
+prio: {id}
+  regex".*MPK\(.*"
+prio: {id}
+  regex".*TEELTK\(.*"
+prio: {id}
+  regex".*DB\(.*"
+prio: {id}
+  regex"∀.*"
+prio: {id}
+  regex"!KU\(sign\(.*"
+prio: {id}
+  regex"!KU\(~envelope_key.*"
+prio: {id}
+  regex"!KU\(~k.*"
+
+
+tactic: CodeSecrecy
+presort: s
+deprio: {id}
+  regex"!KU\(~sess.*"
+
+
+tactic: TokenSecrecy
+presort: s
+prio: {id}
+  regex"!KU\(~token.*"
+prio: {id}
+  regex"!KU\(~sess.*"
+prio: {id}
+  regex"!KU\(~AuthCode.*"
+prio: {id}
+  regex"TLSServer.*"
+
+
+tactic: integrity
+presort: s
+prio: {id}
+  regex".*!SuperApp\(.*"
+prio: {id}
+  regex".*MPK\(.*"
+prio: {id}
+  regex".*TEELTK\(.*"
+prio: {id}
+  regex".*DB\(.*"
+prio: {id}
+  regex".*MLTK\(.*"
+prio: {id}
+  regex".*TEEPK\(.*"
+prio: {id}
+  regex".*!JSAPI\(.*"
+prio: {id}
+  regex"!KU\(senc\(.*"
+prio: {id}
+  regex"!KU\(sign\(.*"
+prio: {id}
+  regex"!KU\(~k.*"
+
+
+
+heuristic: o "oracleDID"
+
+
+
+
+
+restriction equal:
+  "∀ a b #i. (Eq( a, b ) @ #i) ⇒ (a = b)"
+  // safety formula
+
+restriction Substring:
+  "∀ a b #i. (Substring( a, b ) @ #i) ⇒ (a ⊏ b)"
+  // safety formula
+
+rule (modulo E) Domain:
+   [ ] --> [ !Domain( $Domain ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) DomainCompromise:
+   [ !Domain( $Domain ) ]
+  --[ CompromisedDomain( $Domain ), AdversaryActivity( ) ]->
+   [ !DomainCompromise( $Domain ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) TLSClientOut[color=#ffffff]:
+   [ TLSClient_Out( method, ~sess, $Domain, msg ), !Domain( $Domain ) ]
+  -->
+   [ !TLSClient( method, ~sess, $Domain, msg ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) TLSAdversaryClientOut[color=#ff6961]:
+   [ In( method ), In( ~sess ), In( msg ), !Domain( $Domain ) ]
+  --[ AdversaryActivity( ) ]->
+   [ !TLSClient( method, ~sess, $Domain, msg ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) TLSServerOut[color=#ffffff]:
+   [ TLSServer_Out( method, ~sess, $Domain, msg ), !Domain( $Domain ) ]
+  -->
+   [ !TLSServer( method, ~sess, $Domain, msg ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) TLSAdversaryServerOut[color=#ff6961]:
+   [ In( method ), In( ~sess ), In( msg ), !DomainCompromise( $Domain ) ]
+  --[ AdversaryActivity( ) ]->
+   [ !TLSServer( method, ~sess, $Domain, msg ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) TLSClientToServer[color=#ffffff]:
+   [ !TLSClient( method, ~sess, $Domain, msg ) ]
+  --[ TLSClientToServer( ~sess, msg ) ]->
+   [ TLSServer_In( method, ~sess, $Domain, msg ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) TLSClientToAdversaryServer[color=#ff6961]:
+   [ !TLSClient( method, ~sess, $Domain, msg ), !DomainCompromise( $Domain )
+   ]
+  --[ AdversaryActivity( ) ]->
+   [ Out( msg ), Out( ~sess ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) TLSServerToClient[color=#ffffff]:
+   [ !TLSServer( method, ~sess, $Domain, msg ) ]
+  --[ TLSServerToClient( ~sess, msg ) ]->
+   [ TLSClient_In( method, ~sess, $Domain, msg ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) TLSServerToAdversaryClient[color=#ff6961]:
+   [
+   In( ~adversarySess ), !TLSServer( method, ~adversarySess, $Domain, msg )
+   ]
+  --[ AdversaryActivity( ) ]->
+   [ Out( msg ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Phone[color=#004225]:
+   [ ]
+  --[ ClaimNumber( $A, $Number ), IsPhoneNumber( $Number ) ]->
+   [ !Phone( $A, $Number ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) InstallSuperAppClient[color=#a3c1ad]:
+   [
+   !Phone( $UserName, $Number ), Fr( ~userid ), Fr( ~sensitiveData ),
+   Fr( ~disclosure ), Fr( ~k )
+   ]
+  --[
+  InstallSuperApp( $UserName, $Number, ~userid ),
+  DataBase( ~userid, ~disclosure, ~sensitiveData )
+  ]->
+   [
+   !SuperApp( $UserName, $Number, ~userid ),
+   !Server( $UserName, $Number, ~userid ),
+   !DB( ~userid, ~disclosure, ~sensitiveData )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+restriction uniqueUserAccount:
+  "∀ name1 name2 number1 number2 userid1 userid2 #i #j.
+    ((InstallSuperApp( name1, number1, userid1 ) @ #i) ∧
+     (InstallSuperApp( name2, number2, userid2 ) @ #j)) ⇒
+    ((((#i = #j) ∧ (name1 = name2)) ∧ (number1 = number2)) ∧
+     (userid1 = userid2))"
+  // safety formula
+
+rule (modulo E) SuperAppSetUp:
+   [ !SuperApp( $userName, $Number, userid ), Fr( ~k ) ]
+  --[
+  SetupKey( userid, ~k ), RegisterDIDdocument( $Holder, $context, pk(~k) )
+  ]->
+   [
+   !TEELTK( $Holder, userid, ~k ), !TEEPK( $Holder, userid, pk(~k) ),
+   !DID( <'context', $context>, <'id', $Holder>, <'auth', pk(~k)> ),
+   Out( pk(~k) )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+restriction uniquClientKey:
+  "∀ userid k1 k2 #i #j.
+    ((SetupKey( userid, k1 ) @ #i) ∧ (SetupKey( userid, k2 ) @ #j)) ⇒
+    (#i = #j)"
+  // safety formula
+
+rule (modulo E) RevealSuperAppKey[color=#e52b50]:
+   [ !TEELTK( $Holder, userid, k ) ]
+  --[ CompromiseTEE( userid ), AdversaryActivity( ) ]->
+   [ Out( k ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) LeakSenstiveData[color=#e52b50]:
+   [ !DB( userid, disclosure, sensitiveData ) ]
+  --[
+  LeakData( userid, sensitiveData ), LeakData( userid, disclosure ),
+  AdversaryActivity( )
+  ]->
+   [ Out( disclosure ), Out( sensitiveData ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) MiniprogramRegister[color=#fff8e7]:
+   [
+   Fr( ~appid ), Fr( ~openid ), Fr( ~k ),
+   !SuperApp( $UserName, $Number, ~userid )
+   ]
+  --[ MiniprogramRegister( $A, ~userid, ~appid ) ]->
+   [
+   !MiniProgram( $A, ~openid, ~appid ), !MLTK( $A, ~appid, ~k ),
+   !MPK( $A, ~appid, pk(~k) ), Out( pk(~k) ),
+   !DID( <'context', $context>, <'id', $A>, <'auth', pk(~k)> )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) RevealMiniProgramPrivKey[color=#e52b50]:
+   [ !MLTK( $A, appid, ltk ) ]
+  --[ Reaveal( appid, ltk ), AdversaryActivity( ) ]->
+   [ Out( <appid, ltk> ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) AuthCodeRequest[color=#fdd5b1]:
+   [
+   !MiniProgram( $Issuer, openid, appid ),
+   !SuperApp( $UserName, $Number, ~userid ), Fr( ~sess )
+   ]
+  --[ Issuer( appid ), LIssurerAuthCodeRequest( $Issuer, appid ) ]->
+   [
+   St_MP_AuthCodeReq( $Issuer, ~sess, openid, appid ),
+   TLSClient_Out( 'GET', ~sess, $Issuer, <'userInfo', appid, 'req'> )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) SuperAppGenerateAuthCode[color=#6495ed]:
+   [
+   TLSServer_In( 'GET', ~sess, $Issuer, <'userInfo', appid, 'req'> ),
+   !SuperApp( $UserName, $Number, userid ), Fr( ~authCode ), In( %lifeTime )
+   ]
+  --[
+  LAuthCodeGenerate( userid, %lifeTime, ~authCode ), IsSession( ~sess ),
+  InitSession( ~sess ), MustIssuer( appid )
+  ]->
+   [
+   TLSServer_Out( 'GET', ~sess, $Issuer, <'authCode', appid, ~authCode> ),
+   St_SA_IssueCode( $UserName, $Issuer, appid, ~authCode ),
+   AuthCode( ~authCode )
+   ]
+
+  // loop breaker: [0]
+  /* has exactly the trivial AC variant */
+
+restriction legalInitalReq:
+  "¬(∃ sess #i #j. (InitSession( sess ) @ #i) ∧ (!KU( sess ) @ #j))"
+  // safety formula
+
+rule (modulo E) MPgetAuthCode[color=#fdd5b1]:
+   [
+   St_MP_AuthCodeReq( $Issuer, sess, openid, appid ),
+   TLSClient_In( 'GET', sess, $Issuer, <'authCode', appid, authCode> ),
+   Fr( ~sessPost )
+   ]
+  --[
+  LMFGetAuthCode( $Issure, appid, authCode ), StartSession( ~sessPost ),
+  IsAuthCode( authCode )
+  ]->
+   [
+   St_MP_TokenReq( $Issuer, openid, appid, authCode ),
+   TLSClient_Out( 'POST', ~sessPost, $Issuer, <'token_req', appid, authCode>
+   )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) SuperAppAuthEndPointGenerateToken[color=#6495ed]:
+   [
+   TLSServer_In( 'POST', ~sess, $Issuer, <'token_req', appid, authCode> ),
+   St_SA_IssueCode( $UserName, $Issuer, appid, authCode ),
+   !SuperApp( $UserName, $Number, userid ), Fr( ~token )
+   ]
+  --[ IsSession( ~sess ), UseCode( $Issuer, authCode ) ]->
+   [
+   TLSServer_Out( 'POST', ~sess, $Issuer, <'token_consume', appid, ~token>
+   ),
+   St_SA_DistributeToken( $UserName, $Issuer, appid, ~token ),
+   Token( ~token )
+   ]
+
+  // loop breaker: [0]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) MBCallInfoShareAPI[color=#fdfd96]:
+   [
+   St_MP_TokenReq( $Issuer, openid, appid, authCode ),
+   TLSClient_In( 'POST', ~sess, $Issuer, <'token_consume', appid, token> ),
+   Fr( ~sessCall )
+   ]
+  --[ IsSession( ~sess ), StartSession( ~sessCall ) ]->
+   [
+   St_MB_CallInfoShare( $Issuer, openid, appid, token ),
+   TLSClient_Out( 'GET', ~sessCall, $Issuer, <'accessInfoReq', appid, token>
+   )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) SuperAppReturnValue[color=#6495ed]:
+   [
+   TLSServer_In( 'GET', ~sess, $Issuer, <'accessInfoReq', appid, token> ),
+   St_SA_DistributeToken( $UserName, $Issuer, appid, token ),
+   !DB( userid, disclosure, sensitiveData )
+   ]
+  --[ IsSession( ~sess ), IsToken( token ) ]->
+   [
+   TLSServer_Out( 'GET', ~sess, $Issuer,
+                  <'accessInfo', appid, disclosure, sensitiveData>
+   )
+   ]
+
+  // loop breaker: [0]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) MBgetSentitiveData[color=#fdfd96]:
+   [
+   St_MB_CallInfoShare( $Issuer, openid, appid, token ),
+   TLSClient_In( 'GET', ~sess, $Issuer,
+                 <'accessInfo', appid, disclosure, sensitiveData>
+   )
+   ]
+  --[
+  LMBGetSensitiveData( appid, <disclosure, sensitiveData> ),
+  IsSession( ~sess )
+  ]->
+   [ !MBDB( $Issuer, openid, appid, <disclosure, sensitiveData> ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) MBConstructCredential[color=#fdfd96]:
+   [
+   !MBDB( $Issuer, openid, appid, <disclosure, sensitiveData> ),
+   !MLTK( $Issuer, appid, PrivKey ), !TEEPK( $Holder, userid, pubKey ),
+   Fr( ~envelope_key ), Fr( ~sess )
+   ]
+  --[
+  LCredentialIssurance( $Issuer, appid,
+                        <
+                         senc(<(hash(disclosure)++hash(sensitiveData)), 
+                               sign((hash(disclosure)++hash(sensitiveData)), PrivKey)>,
+                              ~envelope_key), 
+                         aenc(~envelope_key, pubKey)>
+  ),
+  SignJWT( <(hash(disclosure)++hash(sensitiveData)), 
+            sign((hash(disclosure)++hash(sensitiveData)), PrivKey)>
+  ),
+  IssueVC( appid,
+           <
+            <(hash(disclosure)++hash(sensitiveData)), 
+             sign((hash(disclosure)++hash(sensitiveData)), PrivKey)>, 
+            (disclosure++sensitiveData)>
+  ),
+  StartSession( ~sess )
+  ]->
+   [
+   JSAPI_Out( 'importVC', appid,
+              <
+               senc(<(hash(disclosure)++hash(sensitiveData)), 
+                     sign((hash(disclosure)++hash(sensitiveData)), PrivKey)>,
+                    ~envelope_key), 
+               aenc(~envelope_key, pubKey)>
+   )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) JSAPIOut[color=#ffffff]:
+   [ JSAPI_Out( NameAPI, id, msg ) ] --> [ !JSAPI( NameAPI, id, msg ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Z_JSAPICompromised[color=#ff6961]:
+   [ !JSAPI( NameAPI, id, msg ) ]
+  --[ MaliciousProgram( NameAPI, id ), AdversaryActivity( ) ]->
+   [ Out( <id, msg> ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) AdversaryJSAPI_out[color=#ffffff]:
+   [ In( NameAPI ), In( id ), In( msg ) ]
+  --[ MaliciousProgram( NameAPI, id ), AdversaryActivity( ) ]->
+   [ !JSAPI( NameAPI, id, msg ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) JSAPIIn[color=#ffffff]:
+   [ !JSAPI( NameAPI, id, msg ) ]
+  --[ JSAPIgenerate( msg ) ]->
+   [ JSAPI_In( NameAPI, id, msg ) ]
+
+  // loop breaker: [0]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) SuperAppStoreVC[color=#6495ed]:
+   [
+   JSAPI_In( 'importVC', appid,
+             <
+              senc(<(hash(disclosure)++hash(sensitiveData)), signature>,
+                   envelope_key), 
+              aenc(envelope_key, pk(skH))>
+   ),
+   !SuperApp( $UserName, $Number, userid ), !MPK( $Issuer, appid, pkI ),
+   !TEELTK( $Holder, userid, skH ), !DB( userid, disclosure, sensitiveData )
+   ]
+  --[
+  Eq( checksign(signature, (hash(disclosure)++hash(sensitiveData)), pkI),
+      true
+  ),
+  LSuperAppStoreVC( userid,
+                    <
+                     senc(<(hash(disclosure)++hash(sensitiveData)), signature>,
+                          envelope_key), 
+                     aenc(envelope_key, pk(skH))>,
+                    <<(hash(disclosure)++hash(sensitiveData)), signature>, 
+                     (disclosure++sensitiveData)>
+  ),
+  SuperAppVC( userid,
+              <
+               senc(<(hash(disclosure)++hash(sensitiveData)), signature>,
+                    envelope_key), 
+               aenc(envelope_key, pk(skH))>,
+              <<(hash(disclosure)++hash(sensitiveData)), signature>, 
+               (disclosure++sensitiveData)>
+  )
+  ]->
+   [
+   !VC( userid,
+        <<(hash(disclosure)++hash(sensitiveData)), signature>, 
+         (disclosure++sensitiveData)>
+   )
+   ]
+
+  /*
+  rule (modulo AC) SuperAppStoreVC[color=#6495ed]:
+     [
+     JSAPI_In( 'importVC', appid,
+               <
+                senc(<(hash(disclosure)++hash(sensitiveData)), signature>,
+                     envelope_key), 
+                aenc(envelope_key, pk(skH))>
+     ),
+     !SuperApp( $UserName, $Number, userid ), !MPK( $Issuer, appid, pkI ),
+     !TEELTK( $Holder, userid, skH ), !DB( userid, disclosure, sensitiveData )
+     ]
+    --[
+    Eq( z, true ),
+    LSuperAppStoreVC( userid,
+                      <
+                       senc(<(hash(disclosure)++hash(sensitiveData)), signature>,
+                            envelope_key), 
+                       aenc(envelope_key, pk(skH))>,
+                      <<(hash(disclosure)++hash(sensitiveData)), signature>, 
+                       (disclosure++sensitiveData)>
+    ),
+    SuperAppVC( userid,
+                <
+                 senc(<(hash(disclosure)++hash(sensitiveData)), signature>,
+                      envelope_key), 
+                 aenc(envelope_key, pk(skH))>,
+                <<(hash(disclosure)++hash(sensitiveData)), signature>, 
+                 (disclosure++sensitiveData)>
+    )
+    ]->
+     [
+     !VC( userid,
+          <<(hash(disclosure)++hash(sensitiveData)), signature>, 
+           (disclosure++sensitiveData)>
+     )
+     ]
+    variants (modulo AC)
+    1. disclosure
+             = disclosure.16
+       pkI   = pkI.18
+       sensitiveData
+             = sensitiveData.19
+       signature
+             = signature.20
+       z     = checksign(signature.20,
+                         (hash(disclosure.16)++hash(sensitiveData.19)), pkI.18)
+    
+    2. disclosure
+             = disclosure.19
+       pkI   = pk(x.30)
+       sensitiveData
+             = sensitiveData.22
+       signature
+             = sign((hash(disclosure.19)++hash(sensitiveData.22)), x.30)
+       z     = true
+  */
+
+restriction UniqueVCstore:
+  "∀ #i #j userid d1 d2 credential.
+    ((SuperAppVC( userid, d1, credential ) @ #i) ∧
+     (SuperAppVC( userid, d2, credential ) @ #j)) ⇒
+    (#i = #j)"
+  // safety formula
+
+rule (modulo E) PresentationRequest[color=#f4c2c2]:
+   [ !MiniProgram( $Verifier, openid, appid ), Fr( ~sess ), Fr( ~ShowReq ) ]
+  --[ Verifier( appid ), LVerifierShowPreReq( $Verifier, appid, ~ShowReq )
+  ]->
+   [
+   St_MF_PresentReq( $Verifier, openid, appid ),
+   JSAPI_Out( 'RequestVP', appid, 'request_VP' )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+restriction UniqueRole:
+  "¬(∃ #i #j appid. (Issuer( appid ) @ #i) ∧ (Verifier( appid ) @ #j))"
+  // safety formula
+
+rule (modulo E) SuperAppConstructVPwithDisclosure[color=#6495ed]:
+   [
+   JSAPI_In( 'RequestVP', appid, request_VP ),
+   !SuperApp( $UserName, $Number, userid ), !TEELTK( $Holder, userid, skH ),
+   !MPK( $Verifier, appid, pkV ),
+   !VC( userid, <Issuer_signed_JWT, (disclosure++sensitiveData)> ),
+   Fr( ~envelope_key )
+   ]
+  --[
+  LHolderPresentVP( userid, appid,
+                    <<Issuer_signed_JWT, disclosure>, 
+                     sign(<Issuer_signed_JWT, disclosure>, skH)>
+  ),
+  Pair( <Issuer_signed_JWT, (disclosure++sensitiveData)>,
+        <Issuer_signed_JWT, disclosure>
+  ),
+  VPrequestFrom( appid ),
+  CredentialPresent( $UserName,
+                     <
+                      senc(<<Issuer_signed_JWT, disclosure>, 
+                            sign(<Issuer_signed_JWT, disclosure>, skH)>,
+                           ~envelope_key), 
+                      aenc(~envelope_key, pkV)>
+  ),
+  HolderPresent( userid,
+                 <
+                  senc(<<Issuer_signed_JWT, disclosure>, 
+                        sign(<Issuer_signed_JWT, disclosure>, skH)>,
+                       ~envelope_key), 
+                  aenc(~envelope_key, pkV)>
+  )
+  ]->
+   [
+   JSAPI_Out( 'PresentVP', appid,
+              <$UserName, 
+               senc(<<Issuer_signed_JWT, disclosure>, 
+                     sign(<Issuer_signed_JWT, disclosure>, skH)>,
+                    ~envelope_key), 
+               aenc(~envelope_key, pkV)>
+   )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+restriction UniqueVPreqfrom:
+  "∀ #i #j app.
+    ((VPrequestFrom( app ) @ #i) ∧ (VPrequestFrom( app ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction UniqueVP:
+  "∀ #i #j userid app VP1 VP2.
+    ((LHolderPresentVP( userid, app, VP1 ) @ #i) ∧
+     (LHolderPresentVP( userid, app, VP2 ) @ #j)) ⇒
+    ((#i = #j) ∧ (VP1 = VP2))"
+  // safety formula
+
+rule (modulo E) MBVerifyPresentation[color=#f4c2c2]:
+   [
+   St_MF_PresentReq( $Verifier, openid, appid ),
+   JSAPI_In( 'PresentVP', appid,
+             <UserName, 
+              senc(<<<digest, signature>, disclosure>, proof>, envelope_key), 
+              aenc(envelope_key, pk(skV))>
+   ),
+   !MLTK( $Verifier, appid, skV ), !MPK( $Issuer, IssueID, pkI ),
+   !TEEPK( $Holder, userid, pkH )
+   ]
+  --[
+  Eq( checksign(proof, <<digest, signature>, disclosure>, pkH), true ),
+  Eq( checksign(signature, digest, pkI), true ),
+  Substring( hash(disclosure), digest ),
+  LPresentationVerify( $Verifier, appid, <<digest, signature>, disclosure>,
+                       <<<digest, signature>, disclosure>, proof>
+  ),
+  GetRights( UserName ),
+  PassVerify( appid,
+              <senc(<<<digest, signature>, disclosure>, proof>, envelope_key), 
+               aenc(envelope_key, pk(skV))>
+  )
+  ]->
+   [ ]
+
+  /*
+  rule (modulo AC) MBVerifyPresentation[color=#f4c2c2]:
+     [
+     St_MF_PresentReq( $Verifier, openid, appid ),
+     JSAPI_In( 'PresentVP', appid,
+               <UserName, 
+                senc(<<<digest, signature>, disclosure>, proof>, envelope_key), 
+                aenc(envelope_key, pk(skV))>
+     ),
+     !MLTK( $Verifier, appid, skV ), !MPK( $Issuer, IssueID, pkI ),
+     !TEEPK( $Holder, userid, pkH )
+     ]
+    --[
+    Eq( z, true ), Eq( z.1, true ), Substring( hash(disclosure), digest ),
+    LPresentationVerify( $Verifier, appid, <<digest, signature>, disclosure>,
+                         <<<digest, signature>, disclosure>, proof>
+    ),
+    GetRights( UserName ),
+    PassVerify( appid,
+                <senc(<<<digest, signature>, disclosure>, proof>, envelope_key), 
+                 aenc(envelope_key, pk(skV))>
+    )
+    ]->
+     [ ]
+    variants (modulo AC)
+    1. digest
+             = digest.21
+       disclosure
+             = disclosure.22
+       pkH   = pkH.25
+       pkI   = pkI.26
+       proof = proof.27
+       signature
+             = signature.28
+       z     = checksign(proof.27, <<digest.21, signature.28>, disclosure.22>,
+                         pkH.25)
+       z.1   = checksign(signature.28, digest.21, pkI.26)
+    
+    2. digest
+             = digest.26
+       disclosure
+             = disclosure.27
+       pkH   = pk(x.43)
+       pkI   = pk(x.44)
+       proof = sign(<<digest.26, sign(digest.26, x.44)>, disclosure.27>, x.43)
+       signature
+             = sign(digest.26, x.44)
+       z     = true
+       z.1   = true
+    
+    3. digest
+             = digest.27
+       disclosure
+             = disclosure.28
+       pkH   = pkH.31
+       pkI   = pk(x.45)
+       proof = proof.33
+       signature
+             = sign(digest.27, x.45)
+       z     = checksign(proof.33,
+                         <<digest.27, sign(digest.27, x.45)>, disclosure.28>, pkH.31)
+       z.1   = true
+    
+    4. digest
+             = digest.28
+       disclosure
+             = disclosure.29
+       pkH   = pk(x.45)
+       pkI   = pkI.33
+       proof = sign(<<digest.28, signature.35>, disclosure.29>, x.45)
+       signature
+             = signature.35
+       z     = true
+       z.1   = checksign(signature.35, digest.28, pkI.33)
+  */
+
+lemma SourcesID [sources]:
+  all-traces
+  "∀ appid #i.
+    (MustIssuer( appid ) @ #i) ⇒
+    ((∃ #h. (!KU( appid ) @ #h) ∧ (#h < #i)) ∨ (∃ #h. Issuer( appid ) @ #h))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ appid #i.
+  (MustIssuer( appid ) @ #i)
+ ∧
+  (∀ #h. (!KU( appid ) @ #h) ⇒ ¬(#h < #i)) ∧
+  (∀ #h. (Issuer( appid ) @ #h) ⇒ ⊥)"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( (last(#i))  ∥
+         (∃ #h. (!KU( appid ) @ #h) ∧ (¬(last(#h))) ∧ (#h < #i))  ∥
+         (∃ #h. (Issuer( appid ) @ #h) ∧ ¬(last(#h))) )
+    case case_1
+    solve( TLSServer_In( 'GET', ~sess, $Issuer, <'userInfo', appid, 'req'>
+           ) ▶₀ #i )
+      case TLSClientToServer_case_1
+      by contradiction /* from formulas */
+    next
+      case TLSClientToServer_case_2
+      by contradiction /* from formulas */
+    qed
+  next
+    case case_2
+    by contradiction /* from formulas */
+  next
+    case case_3
+    by contradiction /* from formulas */
+  qed
+qed
+
+restriction SingleIssuerVerifier:
+  "(∀ appid1 appid2 #i #j.
+     ((Issuer( appid1 ) @ #i) ∧ (Issuer( appid2 ) @ #j)) ⇒ (#i = #j)) ∧
+   (∀ appid #i #j.
+     ((Verifier( appid ) @ #i) ∧ (Verifier( appid ) @ #j)) ⇒ (#i = #j))"
+  // safety formula
+
+lemma SelectiveDisclosure:
+  all-traces
+  "∀ #i #j userid VCdata cred verifier appV payload VP.
+    (((LSuperAppStoreVC( userid, VCdata, cred ) @ #i) ∧
+      (LPresentationVerify( verifier, appV, payload, VP ) @ #j)) ∧
+     (¬(∃ #x. AdversaryActivity( ) @ #x))) ⇒
+    (∃ prefix D d.
+      ((cred = <prefix, D>) ∧ (payload = <prefix, d>)) ∧ (d ⊏ D))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i #j userid VCdata cred verifier appV payload VP.
+  (LSuperAppStoreVC( userid, VCdata, cred ) @ #i) ∧
+  (LPresentationVerify( verifier, appV, payload, VP ) @ #j)
+ ∧
+  (∀ #x. (AdversaryActivity( ) @ #x) ⇒ ⊥) ∧
+  (∀ prefix D d.
+    (cred = <prefix, D>) ∧ (payload = <prefix, d>) ⇒ ¬(d ⊏ D))"
+*/
+simplify
+solve( JSAPI_In( 'importVC', appid,
+                 <
+                  senc(<(hash(disclosure)++hash(sensitiveData)), 
+                        sign((hash(disclosure)++hash(sensitiveData)), x)>,
+                       envelope_key), 
+                  aenc(envelope_key, pk(skH))>
+       ) ▶₀ #i )
+  case JSAPIIn
+  solve( !SuperApp( $UserName, $Number, userid ) ▶₁ #i )
+    case InstallSuperAppClient
+    solve( !MPK( $Issuer, appid, pk(x) ) ▶₂ #i )
+      case MiniprogramRegister
+      solve( !TEELTK( $Holder, ~userid, skH ) ▶₃ #i )
+        case SuperAppSetUp
+        solve( !DB( ~userid, disclosure, sensitiveData ) ▶₄ #i )
+          case InstallSuperAppClient
+          solve( St_MF_PresentReq( $Verifier, openid, appV ) ▶₀ #j )
+            case PresentationRequest
+            solve( JSAPI_In( 'PresentVP', ~appid.1,
+                             <UserName.1, 
+                              senc(<<<digest, sign(digest, x)>, disclosure.1>, 
+                                    sign(<<digest, sign(digest, x)>, disclosure.1>, x.1)>,
+                                   envelope_key.1), 
+                              aenc(envelope_key.1, pk(skV))>
+                   ) ▶₁ #j )
+              case JSAPIIn
+              solve( !MLTK( $Verifier, ~appid.1, skV ) ▶₂ #j )
+                case MiniprogramRegister
+                solve( !MPK( $Issuer.1, IssueID, pk(x) ) ▶₃ #j )
+                  case MiniprogramRegister
+                  solve( !TEEPK( $Holder.1, userid.1, pk(x) ) ▶₄ #j )
+                    case SuperAppSetUp
+                    solve( !JSAPI( 'importVC', ~appid,
+                                   <
+                                    senc(<(hash(~disclosure)++hash(~sensitiveData)), 
+                                          sign((hash(~disclosure)++hash(~sensitiveData)), ~k)>,
+                                         envelope_key), 
+                                    aenc(envelope_key, pk(~k.1))>
+                           ) ▶₀ #vr )
+                      case AdversaryJSAPI_out
+                      by contradiction /* from formulas */
+                    next
+                      case JSAPIOut_case_01
+                      solve( !JSAPI( 'PresentVP', ~appid.1,
+                                     <UserName.1, 
+                                      senc(<<<digest, sign(digest, ~k.2)>, disclosure.1>, 
+                                            sign(<<digest, sign(digest, ~k.2)>, disclosure.1>, ~k.1)>,
+                                           envelope_key.1), 
+                                      aenc(envelope_key.1, pk(~k.3))>
+                             ) ▶₀ #vr.7 )
+                        case AdversaryJSAPI_out
+                        by contradiction /* from formulas */
+                      next
+                        case JSAPIOut_case_1
+                        solve( TLSServer_In( 'GET', ~sess.2, $Issuer,
+                                             <'accessInfoReq', ~appid, ~token.1>
+                               ) ▶₀ #vr.20 )
+                          case TLSClientToServer_case_1
+                          solve( TLSServer_In( 'POST', ~sess.2, $Issuer,
+                                               <'token_req', ~appid, ~authCode.1>
+                                 ) ▶₀ #vr.23 )
+                            case TLSClientToServer_case_1
+                            solve( TLSServer_In( 'GET', ~sess.2, $Issuer, <'userInfo', ~appid, 'req'>
+                                   ) ▶₀ #vr.25 )
+                              case TLSClientToServer_case_1
+                              solve( !JSAPI( 'RequestVP', ~appid.1, request_VP ) ▶₀ #vr.29 )
+                                case AdversaryJSAPI_out
+                                by contradiction /* from formulas */
+                              next
+                                case JSAPIOut
+                                solve( !JSAPI( 'importVC', ~appid.2,
+                                               <
+                                                senc(<(hash(~disclosure)++hash(~sensitiveData)), 
+                                                      sign((hash(~disclosure)++hash(~sensitiveData)), ~k.2)>,
+                                                     envelope_key.2), 
+                                                aenc(envelope_key.2, pk(~k.1))>
+                                       ) ▶₀ #vr.31 )
+                                  case AdversaryJSAPI_out
+                                  by contradiction /* from formulas */
+                                next
+                                  case JSAPIOut
+                                  by contradiction /* contradictory subterm store */
+                                qed
+                              qed
+                            next
+                              case TLSClientToServer_case_2
+                              by contradiction /* from formulas */
+                            qed
+                          next
+                            case TLSClientToServer_case_2
+                            by contradiction /* from formulas */
+                          qed
+                        next
+                          case TLSClientToServer_case_2
+                          by contradiction /* from formulas */
+                        qed
+                      next
+                        case JSAPIOut_case_2
+                        solve( TLSServer_In( 'GET', ~sess.2, $Issuer,
+                                             <'accessInfoReq', ~appid, ~token.1>
+                               ) ▶₀ #vr.20 )
+                          case TLSClientToServer_case_1
+                          solve( TLSServer_In( 'POST', ~sess.2, $Issuer,
+                                               <'token_req', ~appid, ~authCode.1>
+                                 ) ▶₀ #vr.23 )
+                            case TLSClientToServer_case_1
+                            solve( TLSServer_In( 'GET', ~sess.2, $Issuer, <'userInfo', ~appid, 'req'>
+                                   ) ▶₀ #vr.25 )
+                              case TLSClientToServer_case_1
+                              solve( !JSAPI( 'RequestVP', ~appid.1, request_VP ) ▶₀ #vr.29 )
+                                case AdversaryJSAPI_out
+                                by contradiction /* from formulas */
+                              next
+                                case JSAPIOut
+                                solve( !JSAPI( 'importVC', ~appid.2,
+                                               <
+                                                senc(<(hash(~disclosure)++hash(~sensitiveData)), 
+                                                      sign((hash(~disclosure)++hash(~sensitiveData)), ~k.2)>,
+                                                     envelope_key.2), 
+                                                aenc(envelope_key.2, pk(~k.1))>
+                                       ) ▶₀ #vr.31 )
+                                  case AdversaryJSAPI_out
+                                  by contradiction /* from formulas */
+                                next
+                                  case JSAPIOut
+                                  by contradiction /* contradictory subterm store */
+                                qed
+                              qed
+                            next
+                              case TLSClientToServer_case_2
+                              by contradiction /* from formulas */
+                            qed
+                          next
+                            case TLSClientToServer_case_2
+                            by contradiction /* from formulas */
+                          qed
+                        next
+                          case TLSClientToServer_case_2
+                          by contradiction /* from formulas */
+                        qed
+                      qed
+                    next
+                      case JSAPIOut_case_02
+                      by contradiction /* from formulas */
+                    next
+                      case JSAPIOut_case_03
+                      by contradiction /* from formulas */
+                    next
+                      case JSAPIOut_case_04
+                      by contradiction /* from formulas */
+                    next
+                      case JSAPIOut_case_05
+                      by contradiction /* from formulas */
+                    next
+                      case JSAPIOut_case_06
+                      by contradiction /* from formulas */
+                    next
+                      case JSAPIOut_case_07
+                      by contradiction /* from formulas */
+                    next
+                      case JSAPIOut_case_08
+                      by contradiction /* from formulas */
+                    next
+                      case JSAPIOut_case_09
+                      by contradiction /* from formulas */
+                    next
+                      case JSAPIOut_case_10
+                      by contradiction /* from formulas */
+                    next
+                      case JSAPIOut_case_11
+                      by contradiction /* from formulas */
+                    next
+                      case JSAPIOut_case_12
+                      by contradiction /* from formulas */
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma StrictSelectiveDisclosure:
+  all-traces
+  "∀ #j verifier appV payload VP.
+    ((LPresentationVerify( verifier, appV, payload, VP ) @ #j) ∧
+     (¬(∃ #x. AdversaryActivity( ) @ #x))) ⇒
+    (∃ userid VCdata cred #i.
+      (LSuperAppStoreVC( userid, VCdata, cred ) @ #i) ∧
+      (∃ prefix D d.
+        (((cred = <prefix, D>) ∧ (payload = <prefix, d>)) ∧ (d ⊏ D)) ∧
+        (¬(D ⊏ d))))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #j verifier appV payload VP.
+  (LPresentationVerify( verifier, appV, payload, VP ) @ #j)
+ ∧
+  (∀ #x. (AdversaryActivity( ) @ #x) ⇒ ⊥) ∧
+  (∀ userid VCdata cred #i.
+    (LSuperAppStoreVC( userid, VCdata, cred ) @ #i)
+   ⇒
+    ∀ prefix D d.
+     (cred = <prefix, D>) ∧ (payload = <prefix, d>) ⇒ ((¬(d ⊏ D)) ∨ (D ⊏ d)))"
+*/
+simplify
+solve( St_MF_PresentReq( $Verifier, openid, appV ) ▶₀ #j )
+  case PresentationRequest
+  solve( JSAPI_In( 'PresentVP', ~appid,
+                   <UserName, 
+                    senc(<<<digest, sign(digest, x)>, disclosure>, 
+                          sign(<<digest, sign(digest, x)>, disclosure>, x.1)>,
+                         envelope_key), 
+                    aenc(envelope_key, pk(skV))>
+         ) ▶₁ #j )
+    case JSAPIIn
+    solve( !MLTK( $Verifier, ~appid, skV ) ▶₂ #j )
+      case MiniprogramRegister
+      solve( !MPK( $Issuer, IssueID, pk(x) ) ▶₃ #j )
+        case MiniprogramRegister
+        solve( !TEEPK( $Holder, userid, pk(x) ) ▶₄ #j )
+          case SuperAppSetUp
+          solve( !JSAPI( 'PresentVP', ~appid,
+                         <UserName, 
+                          senc(<<<digest, sign(digest, ~k)>, disclosure>, 
+                                sign(<<digest, sign(digest, ~k)>, disclosure>, ~k.1)>,
+                               envelope_key), 
+                          aenc(envelope_key, pk(~k.2))>
+                 ) ▶₀ #vr.4 )
+            case AdversaryJSAPI_out
+            by contradiction /* from formulas */
+          next
+            case JSAPIOut_case_1
+            by contradiction /* from formulas */
+          next
+            case JSAPIOut_case_2
+            by contradiction /* from formulas */
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.8.0
+Maude version 2.7.1
+Git revision: UNKNOWN, branch: UNKNOWN
+Compiled at: 2023-08-30 13:15:41.590881948 UTC
+*/
+
+end
