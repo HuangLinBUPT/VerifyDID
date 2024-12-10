@@ -22,7 +22,7 @@ To manually inspect the proof state, especially for risk analysis, use the follo
 ```bash
 tamarin-prover interactive . -D=goalx --verbose --derivcheck-timeout=0.
 ```
-Here, goalx can be replaced with one of exec, goal1, goal2, goal3, or goal4. For example, to check the Executability lemma, use:
+Here, goalx can be replaced with one of `exec`, `goal1`, `goal2`, `goal3`, `goal4` or `goal5`. For example, to check the Executability lemma, use:
 
 ```bash
 tamarin-prover interactive . -D=exec --verbose --derivcheck-timeout=0.
