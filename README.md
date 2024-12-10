@@ -29,4 +29,4 @@ tamarin-prover interactive . -D=exec --verbose --derivcheck-timeout=0.
 ```
 
 ### Reference
-We use the TLS/HTTPS multiset rewriting rules modeled in [SOAP Project](https://github.com/soap-wg/soap-proofs/tree/main). 
+We use the TLS/HTTPS multiset rewriting rules modeled in [SOAP Project](https://github.com/soap-wg/soap-proofs/blob/main/src/tls.spthy). 
