@@ -1,7 +1,6 @@
 ## Decentralized Identity in Super Apps: A Formal Security Analysis
 
 This repository contains the formal model and proofs for Decentralized Identity in Super Apps. The models can be verified using the Tamarin Prover.
-As the model is large, it may take very long time to load all of them.
 
 ### Installation
 
@@ -18,6 +17,9 @@ After installation, you can review the proofs provided in the [proofs](https://g
 cd proofs 
 tamarin-prover interactive .
 ```
+
+
+As the model is large, it may take a considerable amount of time to load all of the components. We recommend creating a new folder and loading only the specific theory you are interested in each time.
 
 ### Automated Proof with Tactic
 To reproduce the [proofs](https://github.com/zerrymore11/VerifyDID/tree/main/proofs) from our manuscript, we provide a shell script `batch-all.sh` that will generate all proofs and the corresponding logs for each property.
