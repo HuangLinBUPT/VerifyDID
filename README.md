@@ -19,6 +19,10 @@ cd proofs
 tamarin-prover interactive .
 ```
 
+=======
+
+As the model is large, it may take a considerable amount of time to load all of the components. We recommend creating a new folder and loading only the specific theory you are interested in each time.
+
 ### Automated Proof with Tactic
 To reproduce the [proofs](https://github.com/zerrymore11/VerifyDID/tree/main/proofs) from our manuscript, we provide a shell script `batch-all.sh` that will generate all proofs and the corresponding logs for each property.
 Please note that reproducing all the results may take some time, as the proof process is time-consuming. 

@@ -380,7 +380,7 @@ rule MBVerifyPresentation[color=#F4C2C2]:
   let 
       pkV = pk(skV)
       // digest = prefixHash ++ postfixHash
-	  Issuer_signed_JWT = <digest, signature>
+	    Issuer_signed_JWT = <digest, signature>
       payload = <Issuer_signed_JWT, disclosure>
       VP = <payload, proof>
       envelope_key_encrypted = aenc(envelope_key, pkV)
@@ -657,7 +657,8 @@ lemma UniquePass[heuristic={UniquePass}]:
       ==>
         ( Ex userid #j. 
             HolderPresent(userid, VP)@j & #j < #i
-          & not( Ex verifier #k. PassVerify(verifier, VP)@k & not( #k = #i ) ) )
+          & not( Ex verifier #k. PassVerify(verifier, VP)@k 
+          & not( #k = #i ) ) )
       | ( Ex userid #i. CompromiseTEE(userid)@i ) 
       | ( Ex appid ltk #i. Reaveal(appid, ltk)@i) "
 
