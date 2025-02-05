@@ -374,7 +374,7 @@ restriction UniqueVP:
     & LHolderPresentVP(userid, app, VP2) @ #j 
   ==> #i = #j & VP1 = VP2"
 
-
+#ifdef goal3 & replay
 
 rule MBVerifyPresentation[color=#F4C2C2]:
   let 
@@ -387,7 +387,37 @@ rule MBVerifyPresentation[color=#F4C2C2]:
       encryptedVP = senc(VP, envelope_key)
       Presentation = <encryptedVP, envelope_key_encrypted>
   in
-  [ St_MF_PresentReq($Verifier, openid, appid)
+  [ JSAPI_In('PresentVP', appid, <UserName, Presentation>) 
+  ,	!MLTK($Verifier, appid, skV)
+  ,	!MPK($Issuer, IssueID, pkI)
+  ,	!TEEPK($Holder, userid, pkH)  ]
+--[ Eq(checksign(proof, payload, pkH), true)
+  , Eq(checksign(signature, digest, pkI), true)
+  , Substring(hash(disclosure), digest)
+    // Eq(hash(disclosure), prefixHash),
+  , LPresentationVerify($Verifier, appid, payload, VP)
+  , GetRights(UserName)
+  , PassVerify(appid, Presentation) 
+  // , PassVerify(appid, encryptedVP) 
+]->
+  [ ]
+
+
+#else
+
+rule MBVerifyPresentation[color=#F4C2C2]:
+  let 
+      pkV = pk(skV)
+      // digest = prefixHash ++ postfixHash
+	    Issuer_signed_JWT = <digest, signature>
+      payload = <Issuer_signed_JWT, disclosure>
+      VP = <payload, proof>
+      envelope_key_encrypted = aenc(envelope_key, pkV)
+      encryptedVP = senc(VP, envelope_key)
+      Presentation = <encryptedVP, envelope_key_encrypted>
+  in
+  [ 
+    St_MF_PresentReq($Verifier, openid, appid)
   , JSAPI_In('PresentVP', appid, <UserName, Presentation>) 
   ,	!MLTK($Verifier, appid, skV)
   ,	!MPK($Issuer, IssueID, pkI)
@@ -402,6 +432,8 @@ rule MBVerifyPresentation[color=#F4C2C2]:
   // , PassVerify(appid, encryptedVP) 
 ]->
   [ ]
+
+#endif
 
 
 
@@ -623,7 +655,6 @@ lemma NonInjectAuthVCIssurance[reuse, heuristic={exec}]:
     | ( Ex appid ltk #i. Reaveal(appid, ltk)@i)
     "
 
-
 /*======================================================================*/
 /*                        Goal 2: Integrity                             */
 /*----------------------------------------------------------------------*/
@@ -710,19 +741,60 @@ lemma SelectiveDisclosure:
 
 /* This is a stronger property, which rules that d is the 
  * strict subset of D. */
-lemma StrictSelectiveDisclosure:
+lemma StrictSelectiveDisclosure[heuristic={UniquePass}]:
   "All #j verifier appV payload VP.
       // LSuperAppStoreVC(userid, VCdata, cred)@i
       LPresentationVerify(verifier, appV, payload, VP)@j
-    & (not Ex #x. AdversaryActivity() @ #x)
+    // & (not Ex #x. AdversaryActivity() @ #x & not(#j < #x))
     ==>
       Ex userid VCdata cred #i.
-          LSuperAppStoreVC(userid, VCdata, cred)@i
+          LSuperAppStoreVC(userid, VCdata, cred)@i & #i < #j 
         & ( Ex prefix D d. 
             cred = <prefix, D> 
           & payload = <prefix, d> 
           & d << D
           & not (D << d))"
+
+
+
+lemma NonInjectAuthVCIssurance[heuristic={exec}]:
+          "All #i userid data credential.
+            SuperAppVC(userid, data, credential)@i
+            ==>
+              ( Ex #j appid.
+                IssueVC(appid, credential)@j
+                & #j < #i) 
+            | ( Ex appid ltk #i. Reaveal(appid, ltk)@i)
+            "
+
+            
+lemma SD_JWT[heuristic={UniquePass}]:
+  "All #j verifier appV payload VP.
+      LPresentationVerify(verifier, appV, payload, VP)@j
+    ==>
+      (Ex appid cred #i.
+          IssueVC(appid, cred)@i & #i < #j 
+        & ( Ex prefix D d. 
+            cred = <prefix, D> 
+          & payload = <prefix, d> 
+          & d << D) )
+    | ( Ex appid ltk #i. Reaveal(appid, ltk)@i) "
+
+
+lemma taget_goal5[heuristic={UniquePass}]:
+"All #j verifier appV payload VP.
+// LSuperAppStoreVC(userid, VCdata, cred)@i
+LPresentationVerify(verifier, appV, payload, VP)@j
+// & (not Ex #x. AdversaryActivity() @ #x & not(#j < #x))
+==>
+(Ex userid data cred #i.
+    // LSuperAppStoreVC(userid, VCdata, cred)@i & #i < #j 
+    SuperAppVC(userid, data, cred)@i & #i < #j 
+  & ( Ex prefix D d. 
+      cred = <prefix, D> 
+    & payload = <prefix, d> 
+    & d << D) )
+    | ( Ex userid #i. CompromiseTEE(userid)@i )"
 
 #endif
 
