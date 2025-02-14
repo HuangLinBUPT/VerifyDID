@@ -49,16 +49,16 @@ rule Phone[color=#004225]:
 /*------------------------------------------- */
 
 rule InstallSuperAppClient[color=#A3C1AD]:
-	[	!Phone($UserName, $Number)
-	,	Fr(~userid)
-	, Fr(~sensitiveData)
-	,	Fr(~disclosure)
-	,	Fr(~k) ]
---[	InstallSuperApp($UserName, $Number, ~userid)
+ [ !Phone($UserName, $Number)
+ , Fr(~userid)
+ , Fr(~sensitiveData)
+ , Fr(~disclosure)
+ , Fr(~k) ]
+--[ InstallSuperApp($UserName, $Number, ~userid)
   , DataBase(~userid, ~disclosure, ~sensitiveData) ]->
-	[ !SuperApp($UserName, $Number, ~userid)
-	,	!Server($UserName, $Number, ~userid)	
-	,	!DB(~userid, ~disclosure, ~sensitiveData) ]
+ [ !SuperApp($UserName, $Number, ~userid)
+ , !Server($UserName, $Number, ~userid) 
+ , !DB(~userid, ~disclosure, ~sensitiveData) ]
 
 restriction uniqueUserAccount:
   "All name1 name2 number1 number2 userid1 userid2 #i #j.
@@ -66,22 +66,22 @@ restriction uniqueUserAccount:
     & InstallSuperApp(name2, number2, userid2)@j
     ==> 
       #i = #j & name1 = name2 & number1 = number2
-		& userid1 = userid2"
+  & userid1 = userid2"
 
 
 rule SuperAppSetUp:
-	[	!SuperApp($userName, $Number, userid)
-	,	Fr(~k)	]
---[	SetupKey(userid, ~k)
-	,	RegisterDIDdocument($Holder, $context, pk(~k))	]->
-	[	!TEELTK($Holder, userid, ~k)
-	,	!TEEPK($Holder, userid, pk(~k))
-	, !DID(<'context', $context>, <'id', $Holder>, <'auth', pk(~k)>) 
-	, Out(pk(~k))	]
+ [ !SuperApp($userName, $Number, userid)
+ , Fr(~k) ]
+--[ SetupKey(userid, ~k)
+ , RegisterDIDdocument($Holder, $context, pk(~k)) ]->
+ [ !TEELTK($Holder, userid, ~k)
+ , !TEEPK($Holder, userid, pk(~k))
+ , !DID(<'context', $context>, <'id', $Holder>, <'auth', pk(~k)>) 
+ , Out(pk(~k)) ]
 
 restriction uniquClientKey:
   "All userid k1 k2 #i #j.
-			SetupKey(userid, k1)@i 
+   SetupKey(userid, k1)@i 
     & SetupKey(userid, k2)@j
     ==> #i = #j"
 
@@ -101,9 +101,9 @@ rule LeakSenstiveData[color=#E52B50]:
     LeakData(userid, disclosure),
     AdversaryActivity() ]->
   [ Out(disclosure)
-	,	Out(sensitiveData) ]
+ , Out(sensitiveData) ]
 
-	
+ 
 
 /*=== Anouymous openid for different mini-programs  ===*/
 /*******************************************************/
@@ -114,18 +114,18 @@ rule LeakSenstiveData[color=#E52B50]:
  * web-based mobile applications.*/
 /********************************************************/
 rule MiniprogramRegister[color=#FFF8E7]:
-	[	Fr(~appid)
-	,	Fr(~openid)
-	,	Fr(~k)
-	,	!SuperApp($UserName, $Number, ~userid)]
---[	MiniprogramRegister($A, ~userid, ~appid)	]->
-	[	/*=== The miniProgram `appid` is register within SuperApp $A, ===*/
-		/*=== whose identifier is masked as `openid`.        					===*/
-		!MiniProgram($A, ~openid, ~appid)
-	,	!MLTK($A, ~appid, ~k)
-	,	!MPK($A, ~appid, pk(~k))
-	,	Out(pk(~k))
-	,	!DID(<'context', $context>, <'id', $A>, <'auth', pk(~k)>) ]
+ [ Fr(~appid)
+ , Fr(~openid)
+ , Fr(~k)
+ , !SuperApp($UserName, $Number, ~userid)]
+--[ MiniprogramRegister($A, ~userid, ~appid) ]->
+ [ /*=== The miniProgram `appid` is register within SuperApp $A, ===*/
+  /*=== whose identifier is masked as `openid`.             ===*/
+  !MiniProgram($A, ~openid, ~appid)
+ , !MLTK($A, ~appid, ~k)
+ , !MPK($A, ~appid, pk(~k))
+ , Out(pk(~k))
+ , !DID(<'context', $context>, <'id', $A>, <'auth', pk(~k)>) ]
 
 
 rule RevealMiniProgramPrivKey[color=#E52B50]:
@@ -139,8 +139,8 @@ rule RevealMiniProgramPrivKey[color=#E52B50]:
 /*-------------------------------------------------------*/
 rule AuthCodeRequest[color=#FDD5B1]:
   [ !MiniProgram($Issuer, openid, appid)
-	, !SuperApp($UserName, $Number, ~userid)
-	,	Fr(~sess)	]
+ , !SuperApp($UserName, $Number, ~userid)
+ , Fr(~sess) ]
 --[ Issuer(appid)
   , LIssurerAuthCodeRequest($Issuer, appid) ]->
   [ St_MP_AuthCodeReq($Issuer, ~sess, openid, appid),
@@ -149,16 +149,16 @@ rule AuthCodeRequest[color=#FDD5B1]:
 
 rule SuperAppGenerateAuthCode[color=#6495ED]:
   [ TLSServer_In('GET', ~sess, $Issuer, <'userInfo', appid, 'req'>)
-	,	!SuperApp($UserName, $Number, userid)
-	,	Fr(~authCode)
-	,	In(%lifeTime)	]
+ , !SuperApp($UserName, $Number, userid)
+ , Fr(~authCode)
+ , In(%lifeTime) ]
 --[ LAuthCodeGenerate(userid, %lifeTime, ~authCode)
   , IsSession(~sess)
   , InitSession(~sess)
   , MustIssuer(appid) ]->
   [ TLSServer_Out('GET', ~sess, $Issuer, <'authCode', appid, ~authCode>)
-	, St_SA_IssueCode($UserName, $Issuer, appid, ~authCode)
-	,	AuthCode(~authCode)  ]
+ , St_SA_IssueCode($UserName, $Issuer, appid, ~authCode)
+ , AuthCode(~authCode)  ]
 
 
 restriction legalInitalReq:
@@ -176,42 +176,42 @@ restriction legalInitalReq:
 
 rule MPgetAuthCode[color=#FDD5B1]:
   [ St_MP_AuthCodeReq($Issuer, sess, openid, appid)
-	,	TLSClient_In('GET', sess, $Issuer, <'authCode', appid, authCode>)
-	,	Fr(~sessPost) ]
+ , TLSClient_In('GET', sess, $Issuer, <'authCode', appid, authCode>)
+ , Fr(~sessPost) ]
 --[ LMFGetAuthCode($Issure, appid, authCode)
   , StartSession(~sessPost)
   , IsAuthCode(authCode) ]->
   [ St_MP_TokenReq($Issuer, openid, appid, authCode)
-	,	TLSClient_Out('POST', ~sessPost, $Issuer, <'token_req', appid, authCode>) ]
+ , TLSClient_Out('POST', ~sessPost, $Issuer, <'token_req', appid, authCode>) ]
 
 
 rule SuperAppAuthEndPointGenerateToken[color=#6495ED]:
   [ TLSServer_In('POST', ~sess, $Issuer, <'token_req', appid, authCode>)
-	,	St_SA_IssueCode($UserName, $Issuer, appid, authCode)
-	,	!SuperApp($UserName, $Number, userid)
-	,	Fr(~token)	]
+ , St_SA_IssueCode($UserName, $Issuer, appid, authCode)
+ , !SuperApp($UserName, $Number, userid)
+ , Fr(~token) ]
 --[ IsSession(~sess)
   , UseCode($Issuer, authCode)  ]->
   [ TLSServer_Out('POST', ~sess, $Issuer, <'token_consume', appid, ~token>)
-	,	St_SA_DistributeToken($UserName, $Issuer, appid, ~token)
-	,	Token(~token)  ]
+ , St_SA_DistributeToken($UserName, $Issuer, appid, ~token)
+ , Token(~token)  ]
 
 
 rule MBCallInfoShareAPI[color=#FDFD96]:
   [ St_MP_TokenReq($Issuer, openid, appid, authCode)
-	,	TLSClient_In('POST', ~sess, $Issuer, <'token_consume', appid, token>)
-	,	Fr(~sessCall) ]
+ , TLSClient_In('POST', ~sess, $Issuer, <'token_consume', appid, token>)
+ , Fr(~sessCall) ]
 --[ IsSession(~sess)
   , StartSession(~sessCall) ]->
   [ St_MB_CallInfoShare($Issuer, openid, appid, token)
-	,	TLSClient_Out('GET', ~sessCall, $Issuer, <'accessInfoReq', appid, token>) ]
+ , TLSClient_Out('GET', ~sessCall, $Issuer, <'accessInfoReq', appid, token>) ]
 
 
 
 rule SuperAppReturnValue[color=#6495ED]:
   [ TLSServer_In('GET', ~sess, $Issuer, <'accessInfoReq', appid, token>)
-	,	St_SA_DistributeToken($UserName, $Issuer, appid, token)
-  ,	!DB(userid, disclosure, sensitiveData)]
+ , St_SA_DistributeToken($UserName, $Issuer, appid, token)
+  , !DB(userid, disclosure, sensitiveData)]
 --[ IsSession(~sess)
   , IsToken(token)  ]->
   [ TLSServer_Out('GET', ~sess, $Issuer, <'accessInfo', appid, <disclosure, sensitiveData>>)]
@@ -220,9 +220,9 @@ rule SuperAppReturnValue[color=#6495ED]:
 
 rule MBgetSentitiveData[color=#FDFD96]:
   [ St_MB_CallInfoShare($Issuer, openid, appid, token)
-	,	TLSClient_In('GET', ~sess, $Issuer, <'accessInfo', appid, <disclosure, sensitiveData>>)]
---[	LMBGetSensitiveData(appid, <disclosure, sensitiveData>)
-  , IsSession(~sess)	]->
+ , TLSClient_In('GET', ~sess, $Issuer, <'accessInfo', appid, <disclosure, sensitiveData>>)]
+--[ LMBGetSensitiveData(appid, <disclosure, sensitiveData>)
+  , IsSession(~sess) ]->
   [ !MBDB($Issuer, openid, appid, <disclosure, sensitiveData>) ]
 
 
@@ -254,10 +254,10 @@ rule MBConstructCredential[color=#FDFD96]:
       VC_data = <senc(Issuer_signed_JWT, ~envelope_key), envelope_key_encrypted>
   in
   [ !MBDB($Issuer, openid, appid, <disclosure, sensitiveData>)
-	,	!MLTK($Issuer, appid, PrivKey)
-  ,	!TEEPK($Holder, userid, pubKey) // userid is not accessible
-  ,	Fr(~envelope_key)
-  ,	Fr(~sess) ]
+ , !MLTK($Issuer, appid, PrivKey)
+  , !TEEPK($Holder, userid, pubKey) // userid is not accessible
+  , Fr(~envelope_key)
+  , Fr(~sess) ]
 --[ LCredentialIssurance($Issuer, appid, VC_data)
   , SignJWT(Issuer_signed_JWT)
   , IssueVC(appid, credential)
@@ -299,15 +299,15 @@ rule SuperAppStoreVC[color=#6495ED]:
       VC_data = <senc(Issuer_signed_JWT, envelope_key), envelope_key_encrypted>
   in
   [ JSAPI_In('importVC', appid, VC_data)
-	,	!SuperApp($UserName, $Number, userid)
-	,	!MPK($Issuer, appid, pkI)
-	,	!TEELTK($Holder, userid, skH)
-	,	!DB(userid, disclosure, sensitiveData)     ]
+ , !SuperApp($UserName, $Number, userid)
+ , !MPK($Issuer, appid, pkI)
+ , !TEELTK($Holder, userid, skH)
+ , !DB(userid, disclosure, sensitiveData)     ]
 --[ Eq(checksign(signature, digest, pkI), true),
     LSuperAppStoreVC(userid, VC_data, credential),
     SuperAppVC(userid, VC_data, credential)  ]->
   /*==  The credential is stored in THE Client of SuperApp, e.g., TEE. ==*/
-  [ !VC(userid, credential)	]
+  [ !VC(userid, credential) ]
 
 
 restriction UniqueVCstore:
@@ -318,12 +318,12 @@ restriction UniqueVCstore:
 
 rule PresentationRequest[color=#F4C2C2]:
   [ !MiniProgram($Verifier, openid, appid)
-	,	Fr(~sess)
-	,	Fr(~ShowReq) ]
+ , Fr(~sess)
+ , Fr(~ShowReq) ]
 --[ Verifier(appid)
   , LVerifierShowPreReq($Verifier, appid, ~ShowReq)  ]->
   [ St_MF_PresentReq($Verifier, openid, appid)
-	,	JSAPI_Out('RequestVP', appid, 'request_VP') ]
+ , JSAPI_Out('RequestVP', appid, 'request_VP') ]
 
 
 /* We assume that a mini-program is either a verifier or an issuer */
@@ -343,10 +343,10 @@ rule SuperAppConstructVPwithDisclosure[color=#6495ED]:
       Presentation = <encryptedVP, envelope_key_encrypted>
   in
   [ JSAPI_In('RequestVP', appid, request_VP) 
-  ,	!SuperApp($UserName, $Number, userid)
-	,	!TEELTK($Holder, userid, skH)
-	,	!MPK($Verifier, appid, pkV)
-	,	!VC(userid, credential)
+  , !SuperApp($UserName, $Number, userid)
+ , !TEELTK($Holder, userid, skH)
+ , !MPK($Verifier, appid, pkV)
+ , !VC(userid, credential)
   , Fr(~envelope_key) ]
 --[ LHolderPresentVP(userid, appid, VP)
   , Pair(credential, payload)
@@ -380,7 +380,7 @@ rule MBVerifyPresentation[color=#F4C2C2]:
   let 
       pkV = pk(skV)
       // digest = prefixHash ++ postfixHash
-	    Issuer_signed_JWT = <digest, signature>
+     Issuer_signed_JWT = <digest, signature>
       payload = <Issuer_signed_JWT, disclosure>
       VP = <payload, proof>
       envelope_key_encrypted = aenc(envelope_key, pkV)
@@ -388,9 +388,9 @@ rule MBVerifyPresentation[color=#F4C2C2]:
       Presentation = <encryptedVP, envelope_key_encrypted>
   in
   [ JSAPI_In('PresentVP', appid, <UserName, Presentation>) 
-  ,	!MLTK($Verifier, appid, skV)
-  ,	!MPK($Issuer, IssueID, pkI)
-  ,	!TEEPK($Holder, userid, pkH)  ]
+  , !MLTK($Verifier, appid, skV)
+  , !MPK($Issuer, IssueID, pkI)
+  , !TEEPK($Holder, userid, pkH)  ]
 --[ Eq(checksign(proof, payload, pkH), true)
   , Eq(checksign(signature, digest, pkI), true)
   , Substring(hash(disclosure), digest)
@@ -409,7 +409,7 @@ rule MBVerifyPresentation[color=#F4C2C2]:
   let 
       pkV = pk(skV)
       // digest = prefixHash ++ postfixHash
-	    Issuer_signed_JWT = <digest, signature>
+     Issuer_signed_JWT = <digest, signature>
       payload = <Issuer_signed_JWT, disclosure>
       VP = <payload, proof>
       envelope_key_encrypted = aenc(envelope_key, pkV)
@@ -419,9 +419,9 @@ rule MBVerifyPresentation[color=#F4C2C2]:
   [ 
     St_MF_PresentReq($Verifier, openid, appid)
   , JSAPI_In('PresentVP', appid, <UserName, Presentation>) 
-  ,	!MLTK($Verifier, appid, skV)
-  ,	!MPK($Issuer, IssueID, pkI)
-  ,	!TEEPK($Holder, userid, pkH)  ]
+  , !MLTK($Verifier, appid, skV)
+  , !MPK($Issuer, IssueID, pkI)
+  , !TEEPK($Holder, userid, pkH)  ]
 --[ Eq(checksign(proof, payload, pkH), true)
   , Eq(checksign(signature, digest, pkI), true)
   , Substring(hash(disclosure), digest)
@@ -592,6 +592,7 @@ lemma ClaimsSecrecy[reuse]:
 
 
 
+
 lemma risk1[reuse, heuristic={secrecy}, hide_lemma=ClaimsSecrecy]:
   "All credential VC userid #i.
     LSuperAppStoreVC(userid, VC, credential)@i 
@@ -667,10 +668,9 @@ lemma integrityOfVC[hide_lemma=NonInjectAuthVCIssurance, heuristic={integrity}]:
     "All #i userid data credential.
       SuperAppVC(userid, data, credential)@i
       ==>
-        ( Ex #j appid.
-            IssueVC(appid, credential)@j
-          & #j < #i) 
-          | ( Ex appid ltk #i. Reaveal(appid, ltk)@i)"
+        (Ex #j appid.
+          IssueVC(appid, credential)@j & #j < #i) 
+      | (Ex appid ltk #i. Reaveal(appid, ltk)@i)"
 #endif
 
 
@@ -686,7 +686,7 @@ lemma UniquePass[heuristic={UniquePass}]:
   "All VP appid #i.
         PassVerify(appid, VP)@i
       ==>
-        ( Ex userid #j. 
+      ( Ex userid #j. 
             HolderPresent(userid, VP)@j & #j < #i
           & not( Ex verifier #k. PassVerify(verifier, VP)@k 
           & not( #k = #i ) ) )
@@ -727,7 +727,7 @@ lemma LegalPresentation:
 /* the credential issuance.                            */
 /*******************************************************/
 
-lemma SelectiveDisclosure:
+lemma weakest_SelectiveDisclosure:
   "All #i #j userid VCdata cred verifier appV payload VP.
       LSuperAppStoreVC(userid, VCdata, cred)@i
     & LPresentationVerify(verifier, appV, payload, VP)@j
@@ -768,33 +768,47 @@ lemma NonInjectAuthVCIssurance[heuristic={exec}]:
             "
 
             
-lemma SD_JWT[heuristic={UniquePass}]:
+
+
+lemma taget_goal5[heuristic={authStoreVC}, reuse]:
   "All #j verifier appV payload VP.
-      LPresentationVerify(verifier, appV, payload, VP)@j
-    ==>
-      (Ex appid cred #i.
-          IssueVC(appid, cred)@i & #i < #j 
-        & ( Ex prefix D d. 
-            cred = <prefix, D> 
-          & payload = <prefix, d> 
-          & d << D) )
-    | ( Ex appid ltk #i. Reaveal(appid, ltk)@i) "
+  // LSuperAppStoreVC(userid, VCdata, cred)@i
+  LPresentationVerify(verifier, appV, payload, VP)@j
+  // & (not Ex #x. AdversaryActivity() @ #x & not(#j < #x))
+  ==>
+    (Ex userid data cred #i.
+      // LSuperAppStoreVC(userid, VCdata, cred)@i & #i < #j 
+      SuperAppVC(userid, data, cred)@i & #i < #j 
+      & ( Ex prefix D d. 
+        cred = <prefix, D> 
+        & payload = <prefix, d> 
+        & d << D) )
+  | (Ex userid #i. CompromiseTEE(userid)@i )"
 
 
-lemma taget_goal5[heuristic={UniquePass}]:
-"All #j verifier appV payload VP.
-// LSuperAppStoreVC(userid, VCdata, cred)@i
-LPresentationVerify(verifier, appV, payload, VP)@j
-// & (not Ex #x. AdversaryActivity() @ #x & not(#j < #x))
-==>
-(Ex userid data cred #i.
-    // LSuperAppStoreVC(userid, VCdata, cred)@i & #i < #j 
-    SuperAppVC(userid, data, cred)@i & #i < #j 
-  & ( Ex prefix D d. 
-      cred = <prefix, D> 
-    & payload = <prefix, d> 
-    & d << D) )
-    | ( Ex userid #i. CompromiseTEE(userid)@i )"
+
+lemma integrityOfVC[hide_lemma=NonInjectAuthVCIssurance, heuristic={integrity}, reuse]:
+    /* The property is formalize as an non-injective agreement */
+        "All #i userid data credential.
+          SuperAppVC(userid, data, credential)@i
+          ==>
+            ( Ex #j appid.
+                IssueVC(appid, credential)@j
+              & #j < #i) 
+              | ( Ex appid ltk #i. Reaveal(appid, ltk)@i)"
+
+
+lemma SD_JWT[heuristic={UniquePass}]:
+    "All #j verifier appV payload VP.
+        LPresentationVerify(verifier, appV, payload, VP)@j
+      ==>
+        (Ex appid cred #i.
+            IssueVC(appid, cred)@i & #i < #j 
+          & ( Ex prefix D d. 
+              cred = <prefix, D> 
+            & payload = <prefix, d> 
+            & d << D) )
+      | ( Ex appid ltk #i. Reaveal(appid, ltk)@i) "
 
 #endif
 
