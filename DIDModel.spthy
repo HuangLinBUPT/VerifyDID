@@ -3,17 +3,10 @@ begin
 
 builtins: natural-numbers, multiset
 
-heuristic: o "oracleDID"
-
-functions: 
-pk/1, aenc/2, adec/2,
-senc/2, sdec/2,
-sign/2, checksign/3, true/0,
+functions: pk/1, aenc/2, adec/2, senc/2, sdec/2, sign/2, checksign/3, true/0,
 // Selective Discloure
-hash/1,
 hc/1,
-fsys/1, gsys/1,
-maskedID/2
+fsys/1, gsys/1
 
 
 equations: sdec(senc(x, k), k) = x
@@ -32,7 +25,6 @@ restriction Substring:
  
 
 
-/****************************************** */ 
 rule JSAPIOut[color=#FFFFFF]:
     [ JSAPI_Out(NameAPI, id, msg) ]
     -->
@@ -54,7 +46,6 @@ rule JSAPIIn[color=#FFFFFF]:
     [ !JSAPI(NameAPI, id, msg) ]
     --[ JSAPIgenerate(msg) ]->
     [ JSAPI_In(NameAPI, id, msg) ]
-/****************************************** */ 
 
 
 //// Phone Initialization ////
@@ -66,14 +57,12 @@ rule Phone[color=#004225]:
 
 
 //// Install SuperApp client ////
-/*--------------------------------------------*/
-/* An OpenID is a unique identifier for Alipay 
- * users at the application level. When Alipay 
- * users access different applications such as 
- * mini-programs, web-based mobile applications, 
- * or Official Accounts, a unique OpenID is generated. */
-/*------------------------------------------- */
-
+//
+// An OpenID is a unique identifier for Alipay 
+// users at the application level. When Alipay 
+// users access different applications such as 
+// mini-programs, web-based mobile applications, 
+// or Official Accounts, a unique OpenID is generated.
 rule InstallSuperAppClient[color=#A3C1AD]:
     [ !Phone($UserName, $Number)
     , Fr(~userid)
@@ -130,23 +119,19 @@ rule LeakSenstiveData[color=#E52B50]:
 
  
 
-/*=== Anouymous openid for different mini-programs  ===*/
-/*******************************************************/
-/* Furthermore, for the same user, the OpenID differs 
- * across various applications. For instance, the OpenID 
- * for the same user will vary between different mini-
- * programs, and similarly, it will differ across various
- * web-based mobile applications.*/
-/********************************************************/
+//// Anouymous openid for different mini-programs ////
+// Furthermore, for the same user, the OpenID differs 
+// across various applications. For instance, the OpenID 
+// for the same user will vary between different mini-
+// programs, and similarly, it will differ across various
+// web-based mobile applications.
 rule MiniprogramRegister[color=#FFF8E7]:
     [ Fr(~appid)
     , Fr(~openid)
     , Fr(~k)
     , !SuperApp($UserName, $Number, ~userid)]
   --[ MiniprogramRegister($A, ~userid, ~appid) ]->
-    [ /*=== The miniProgram `appid` is register within SuperApp $A, ===*/
-    /*=== whose identifier is masked as `openid`.             ===*/
-    !MiniProgram($A, ~openid, ~appid)
+    [ !MiniProgram($A, ~openid, ~appid)  // The miniProgram `appid` is register within SuperApp $A, whose identifier is masked as `openid`
     , !MLTK($A, ~appid, ~k)
     , !MPK($A, ~appid, pk(~k))
     , Out(pk(~k))
@@ -247,15 +232,14 @@ rule MBgetSentitiveData[color=#FDFD96]:
 
 
 //// Selective Disclosure ////
-/*  
- * <Issuer-signed JWT>~<Disclosure 1>~<Disclosure 2>~...~<Disclosure N>~ 
- * An SD-JWT+KB with Disclosures:
- * <Issuer-signed JWT>~<Disclosure 1>~<Disclosure N>~<KB-JWT>
- * Each digest value ensures the integrity of, and maps to, the respective Disclosure.
- * Digest values are calculated using a hash function over the Disclosures, 
- * each of which contains a cryptographically secure random salt, 
- * the claim name (only when the claim is an object property), and the claim value.
- */
+//  
+// <Issuer-signed JWT>~<Disclosure 1>~<Disclosure 2>~...~<Disclosure N>~ 
+// An SD-JWT+KB with Disclosures:
+// <Issuer-signed JWT>~<Disclosure 1>~<Disclosure N>~<KB-JWT>
+// Each digest value ensures the integrity of, and maps to, the respective Disclosure.
+// Digest values are calculated using a hash function over the Disclosures, 
+// each of which contains a cryptographically secure random salt, 
+// the claim name (only when the claim is an object property), and the claim value.
 rule MBConstructCredential[color=#FDFD96]: 
     let
       //// synthesized claims fron userinfo /////
@@ -334,7 +318,7 @@ rule PresentationRequest[color=#F4C2C2]:
 
 
 
-    /* We assume that a mini-program is either a verifier or an issuer */
+// We assume that a mini-program is either a verifier or an issuer
 restriction UniqueRole:
     "not ( Ex #i #j appid.
           Issuer(appid)@i & Verifier(appid)@j )
@@ -372,10 +356,10 @@ restriction UniqueVPreqfrom:
   "
 
 
-/* A holder may possess multiple VP. */
-/* Fact `LHolderPresentVP` states that the holder
- * `userid` presents a `VP` to the verifier `app`. 
- * We assume that for a specific verifier, the VP is specific. */
+// A holder may possess multiple VP.
+// Fact `LHolderPresentVP` states that the holder
+// `userid` presents a `VP` to the verifier `app`. 
+// We assume that for a specific verifier, the VP is specific.
 restriction UniqueVP:
   "All #i #j userid app VP1 VP2.
       LHolderPresentVP(userid, app, VP1) @ #i & LHolderPresentVP(userid, app, VP2) @ #j 
@@ -445,14 +429,12 @@ lemma SourcesID[sources]:
 
 
 
-/* We assume that only one issuer */
-/* We assume for the same appid ,there is only
- * on thread of verifier.
- */
-/* A credential (VC） can be used to construct 
- * unbounded number of VP. We do not restrict
- * this feature.
- */
+// We assume that only one issuer.
+// We assume for the same appid ,there is only
+// on thread of verifier.
+
+// A credential (VC） can be used to construct 
+// unbounded number of VP. We do not restrict this feature.
 restriction SingleIssuerVerifier:
     " (All appid1 appid2 #i #j. Issuer(appid1)@i & Issuer(appid2)@j
       ==> #i = #j )
@@ -478,7 +460,7 @@ restriction OnceConstructionVC:
 
 
 
-/* Here is an abstract for non-replay in TLS  */
+// Here is an abstract for non-replay in TLS
 restriction uniqueClientToServer:
     "All sess msg #i #j.
       TLSClientToServer(sess, msg)@i & TLSClientToServer(sess, msg)@j
@@ -515,7 +497,7 @@ lemma Executability:
 #endif
 
 
-/* Goal 1*/
+//// Goal 1 ////
 #ifdef goal1
 lemma SanityCheckCodeSecrcy:
     exists-trace
@@ -543,34 +525,33 @@ lemma TokenSecrecy[reuse, heuristic={TokenSecrecy}]:
         (Ex r #x. CompromisedDomain(r) @ #x)
     "
 
-/*=====================================================*/
-/* Goal 1.1: Secrecy of claims that used in crendetial */
-/*******************************************************/
-/* This is a stronger secrecy lemma, which states that */
-/* if all the intended claims used for the construction*/
-/* of the credential are known by an adversary, then   */
-/* either there exists a data leak from the database,  */
-/* or some client of the TLS session is compromised.   */
-/*******************************************************/
-/* This lemma is falsified (now verified, as I add C4) */
-/* because the disclosure claims can be obtained from  */
-/* the presentation of VP, when the master (encrypted) */
-/* key of the verifier is leaked.                      */
-/*******************************************************/
-/* An interesting finding, which I believe can be seen */
-/* as a potential attack:                              */
-/* - Consider two different VPs constructed from one   */
-/*   credential, where the payloads of VP are:         */
-/*   - p1 = Issuer_signed_JWT ++ disclosure1           */
-/*   - p2 = Issuer_signed_JWT ++ disclosure2           */
-/* - If cred = Issuer_signed_JWT ++ disclosure1 ++     */
-/*   disclosure2, then all the claims can be obtained  */
-/*   from the attack on the presentation of such two   */
-/*   VPs.                                              */
-/* - The attack succeeds when the master keys of the   */
-/*   two verifiers are leaked.                         */
-/*******************************************************/
-lemma userinfoSecrecy[reuse]:
+
+//// Goal 1 Secrecy of claims that used in credential ////
+//
+// This is a stronger secrecy lemma, which states that
+// if all the intended claims used for the construction
+// of the credential are known by an adversary, then
+// either there exists a data leak from the database,
+// or some client of the TLS session is compromised.
+// 
+// This lemma is falsified (now verified, as I add C4)
+// because the disclosure claims can be obtained from
+// the presentation of VP, when the master (encrypted)
+// key of the verifier is leaked.
+// 
+// An interesting finding, which I believe can be seen
+// as a potential attack:
+// - Consider two different VPs constructed from one
+//   credential, where the payloads of VP are:
+//   - p1 = Issuer_signed_JWT ++ disclosure1
+//   - p2 = Issuer_signed_JWT ++ disclosure2
+// - If cred = Issuer_signed_JWT ++ disclosure1 ++
+//   disclosure2, then all the claims can be obtained
+//   from the attack on the presentation of such two
+//   VPs.
+// - The attack succeeds when the master keys of the
+//   two verifiers are leaked.
+lemma userinfoSecrecy[heuristic={claimSecrecy}, reuse]:
     "All #i userid data0 data1.
         DataBase(userid, data0, data1)@i
         ==>
@@ -582,10 +563,7 @@ lemma userinfoSecrecy[reuse]:
     "
 
 lemma risk1[heuristic={claimSecrecy}]:
-    "
-    // All credential VC userid #i.
-    //     LSuperAppStoreVC(userid, VC, credential)@i 
-    All userid VC #j. StoreVC(userid, VC)@j
+    "All userid VC #j. StoreVC(userid, VC)@j
       ==>
           not (Ex #j. K(VC)@j)
           /* C1: There must be a TEE compromised */
@@ -613,30 +591,21 @@ lemma claimsSecrecy[reuse, heuristic={claimSecrecy}]:
     "
 
 
-/*======================================================================*/
-/*            Goal 1.2: Secrecy of Issuer Credential                    */
-/*----------------------------------------------------------------------*/
-/*   The undisclosed data and issued credential should remain private   */
-/*----------------------------------------------------------------------*/
 lemma VCSecrecy[heuristic={secrecyOfCredential}]:
-    "
-    // All credential VC userid #i.
-    //     LSuperAppStoreVC(userid, VC, credential)@i 
-    All userid VC #j. StoreVC(userid, VC)@j
+    "All userid VC #j. StoreVC(userid, VC)@j
       ==>
           not (Ex #j. K(VC)@j)
-          /* C1: There must be a TEE compromised */
+          //// C1: There must be a TEE compromised ////
           | ( Ex #i. CompromiseTEE(userid)@i ) 
-          /*** If there is no TEE compromised, then all the claims should ***/
-          /*** be obtained. Both C2.1 and C2.2 depicts how all the claims ***/
-          /*** can be known by the adversary, i.e., ***/
-          /* C2.1: there exists some TLS session unsecured */
+          // If there is no TEE compromised, then all the claims should
+          // be obtained. Both C2.1 and C2.2 depicts how all the claims
+          // can be known by the adversary, i.e.,
+          //// C2: there exists some TLS session unsecured ////
           | ( Ex r #x. CompromisedDomain(r) @ #x)
-          /***  C3 is a more subtle way to recover credential, it does not ***/
-          /***  need any explict data leak. it states that: ***/
-          /* C3: the complete credential can be recovered from all the VP  ***/
-          /* more specifically, if all the verifiers' secrecy key is leaked  */
-          /* the attack indeed work. */
+          // C3 is a more subtle way to recover credential, it does not need any explict data leak. 
+          // it states that:
+          // C3: the complete credential can be recovered from all the VP ////
+          // more specifically, if all the verifiers' secrecy key is leaked, the attack indeed work.
           | ( Ex #i #j app1 app2. 
                   MaliciousProgram('PresentVP', app1) @ #i
                 & MaliciousProgram('PresentVP', app2) @ #j
@@ -644,16 +613,9 @@ lemma VCSecrecy[heuristic={secrecyOfCredential}]:
 #endif
 
 
-/* Goal 2*/
-/** The Issuer should be legal, otherwise, VC is forgeable. */
+//// Goal 2: Integrity ////
+// The Issuer should be legal, otherwise, VC is forgeable.
 #ifdef goal2
-
-/*======================================================================*/
-/*                        Goal 2: Integrity                             */
-/*----------------------------------------------------------------------*/
-/*   The obtained credential is issued from the intended issuer, which  */
-/*   cannot be tampered with or forged by an adversary.                 */
-/*======================================================================*/
 
 lemma VCIntegrity[hide_lemma=NonInjectAuthVCIssurance, heuristic={integrity}]:
     "All #i userid data credential.
@@ -667,13 +629,13 @@ lemma VCIntegrity[hide_lemma=NonInjectAuthVCIssurance, heuristic={integrity}]:
 
  
 
+//// Goal3 ////
+// There is no replay attack of VP:
+// Different verifier (with different appid) accept different VP
+// and there is only one time presentation, which corresponds to restriction UniqueVP
+// We can use informal method to analyze and get a replay attack,
+// but this lemma gives us an advice how we can prevent such attack
 #ifdef goal3
-/** Goal3 is satisfied in this model, i.e., this is no replay attack of VP:
- * Different verifier (with different appid) accept different VP
- * and there is only one time presentation.
- * which corresponds to restriction UniqueVP*/
-/* We can use informal method to analyze and get an replay attack,
- * but this lemma gives us an advice how we can prevent such attack*/
 lemma UniquePass[heuristic={UniquePass}]:
     "All VP appid #i.
         PassVerify(appid, VP)@i
@@ -689,17 +651,13 @@ lemma UniquePass[heuristic={UniquePass}]:
 #endif
 
 
-/*======================================================================*/
-/*                     Goal 4: Legal Presentaion                        */
-/*----------------------------------------------------------------------*/
-/*  The wallet used by the End-User to present the credentials is the   */
-/*  same wallet to which the credentials have been issued               */
-/*======================================================================*/
-
-
-/* This lemma is fasified, which corresponds to the risk3 in our manuscript */
-/* To recover the attack, we use UserName to represent the identity of the  */
-/* holder, who then get rights after passing the verification of credential */
+////  Goal 4: Legal Presentation  ////
+//  The wallet used by the End-User to present the credentials is the
+//  same wallet to which the credentials have been issued
+//
+// This lemma is falsified, which corresponds to the risk3 in our manuscript
+// To recover the attack, we use UserName to represent the identity of the
+// holder, who then gets rights after passing the verification of credential
 #ifdef goal4
 lemma LegalPresentation:
     "All #i UserName.
@@ -714,14 +672,12 @@ lemma LegalPresentation:
 
 
 
+//// Goal 5 ////
+// After verifying the presentation of a certain
+// credential, the verifier can only obtain claims
+// that are a subset of the claims contained within
+// the credential issuance.
 #ifdef goal5
-/*******************************************************/
-/* After verifying the presentation of a certain       */
-/* credential, the verifier can only obtain claims     */
-/* that are a subset of the claims contained within    */
-/* the credential issuance.                            */
-/*******************************************************/
-
 predicate:
     Originates(VP, VC) 
     <=> 
