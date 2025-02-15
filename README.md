@@ -12,7 +12,13 @@ To check the proofs, first install Tamarin version 1.8.0:
 brew install tamarin-prover/tap/tamarin-prover
 ```
 
-After installation, you can review the proofs provided in the [proofs](https://github.com/zerrymore11/VerifyDID/tree/main/proofs) directory.
+Set the terminal encoding to UTF-8, and make sure that oracle file is executable:
+```bash
+export LC_ALL=C.UTF-8
+chmod +x oracleDID
+```
+
+Now you can review the proofs provided in the [proofs](https://github.com/zerrymore11/VerifyDID/tree/main/proofs) directory.
 ```bash
 cd proofs 
 tamarin-prover interactive .
