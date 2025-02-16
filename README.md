@@ -12,10 +12,10 @@ To check the proofs, first install Tamarin version 1.8.0:
 brew install tamarin-prover/tap/tamarin-prover
 ```
 
-Set the terminal encoding to UTF-8, and make sure that oracle file is executable:
+Set the terminal encoding to UTF-8, and make sure that scripts are executable:
 ```bash
 export LC_ALL=C.UTF-8
-chmod +x oracleDID
+chmod +x batch-all.sh batch-run.sh
 ```
 
 ## Review the Proofs
@@ -56,7 +56,6 @@ tamarin-prover interactive . -D=exec --verbose --derivcheck-timeout=0
 To reproduce all the [proofs](https://github.com/zerrymore11/VerifyDID/tree/main/proof) in our manuscript, we provide a shell script `batch-all.sh` that will generate all proofs and the corresponding logs for each property.
 Please note that reproducing all the results may take some time, as the proof process is time-consuming. 
 ```bash
-chmod +x batch-all.sh batch-run.sh
 ./batch-all.sh
 ```
 
