@@ -39,6 +39,18 @@ tamarin-prover interactive .
 
 Now, open the webpage at [http://127.0.0.1:3001/](http://127.0.0.1:3001/), select a `.spthy` file from the [proof](https://github.com/zerrymore11/VerifyDID/tree/main/proof) directory, and click `Load new theory`.
 
+## Interactive Proof with Tamarin
+To prove each security goal and inspect the proof state manually, use the following command:
+
+```bash
+tamarin-prover interactive . -D=goalx --verbose --derivcheck-timeout=0
+```
+
+Here, goalx can be replaced with one of `exec`, `goal1`, `goal2`, `goal3`, `goal4` or `goal5`. For example, to check the Executability lemma, use:
+
+```bash
+tamarin-prover interactive . -D=exec --verbose --derivcheck-timeout=0
+```
 
 ## Automated Proof with Tactic
 To reproduce all the [proofs](https://github.com/zerrymore11/VerifyDID/tree/main/proof) in our manuscript, we provide a shell script `batch-all.sh` that will generate all proofs and the corresponding logs for each property.
@@ -49,18 +61,6 @@ chmod +x batch-all.sh batch-run.sh
 ```
 
 
-## Interactive Proof with Tamarin Frontend
-To prove each security goal and inspect the proof state manually, use the following command:
-
-```bash
-tamarin-prover interactive . -D=goalx --verbose --derivcheck-timeout=0.
-```
-
-Here, goalx can be replaced with one of `exec`, `goal1`, `goal2`, `goal3`, `goal4` or `goal5`. For example, to check the Executability lemma, use:
-
-```bash
-tamarin-prover interactive . -D=exec --verbose --derivcheck-timeout=0.
-```
 
 ## Reference
 We use the TLS/HTTPS multiset rewriting rules modeled in [SOAP Project](https://github.com/soap-wg/soap-proofs/blob/main/src/tls.spthy). 
