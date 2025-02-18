@@ -79,6 +79,26 @@ deprio:
     regex ".*SuperAppServer\(.*"
 
 
+tactic: claimSecrecy
+presort: s
+prio:
+    regex ".*!MB.*"
+prio:
+    regex "∀.*"
+prio:
+    regex "TLSServer.*"
+prio:
+    regex ".*!MLTK.*"
+prio:
+    regex ".*TEEPK.*"
+prio:
+    regex "!KU\( ~n0.*"
+prio:
+    regex "!KU\( ~n1.*"
+prio:
+    regex "!KU\( fsys\(.*"
+prio:
+    regex "!KU\( gsys\(.*"
 
 
 tactic: secrecyOfCredential
@@ -108,14 +128,16 @@ tactic: CodeSecrecy
 
 tactic: TokenSecrecy
 presort: s
-prio: 
-      regex "!KU\( ~token.*"
 prio:
-      regex "!KU\( ~sess.*"
+      regex ".*St_.*"
 prio:
-      regex "!KU\( ~AuthCode.*"
+      regex ".*DB\(.*"
 prio:
       regex "TLSServer.*"
+prio: 
+      regex "!KU\( ~token.*"
+deprio:
+      regex "!KU\( ~sess \)"
 
 
 
@@ -152,10 +174,42 @@ tactic: UniquePass
   prio:
       regex ".*MLTK\(.*"
   prio:
+      regex "!KU\( ~envkey.*"
+  prio:
+      regex "!KU\( ~k.*"
+  prio:
+      regex "!KU\( aenc\(envkey.*"
+  prio:
+      regex "!KU\( senc\(.*"
+  prio:
+      regex "!KU\( sign\(.*"
+
+
+tactic: SelectiveDisclosure
+  presort: s
+  prio:
+      regex ".*St_MF_PresentReq.*\(.*"
+  prio:
+      regex ".*∥.*"
+  prio:
+    regex ".*⊏.*"
+  prio:
+      regex "!KU\( senc\(.*"
+  prio:
+      regex "!KU\( sign\(.*"
+  prio:
+      regex ".*MLTK\(.*"
+  prio:
       regex "!KU\( ~envelope_key.*"
   prio:
       regex "!KU\( ~k.*"
   prio:
       regex "!KU\( aenc\(envelope_key.*"
+
+
+tactic: authStoreVC
+  presort: s
   prio:
-      regex "!KU\( senc\(.*"
+    regex "!KU\( .*sign\(<.*"
+  prio:
+    regex "!KU\( ~k.*"
