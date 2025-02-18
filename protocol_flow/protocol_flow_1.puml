@@ -1,0 +1,188 @@
+@startuml
+
+' Define styles
+skinparam {
+    ParticipantPadding 20
+    BoxPadding 10
+    SequenceMessageAlign center
+    ArrowColor black
+    NoteBackgroundColor WhiteSmoke
+    NoteFontSize 11
+    ParticipantFontSize 13
+    ParticipantFontColor black
+    NoteFontColor #333333
+    SequenceGroupFontSize 13 
+    SequenceGroupHeaderFontColor #333333
+    MaxMessageSize 200
+}
+
+box "SuperApp Data Region" #6495ED
+participant "SuperApp\nBackend" as SAB
+end box
+
+box "Holder" #lightgreen
+participant "SuperApp\nClient" as SAC
+participant "TEE" as TEE
+end box
+
+box "Issuer" #FDD5B1
+participant "Mini-Program\n(Issuer)" as IMP
+participant "Mini-Program\nBackend" as IMPB
+end box
+
+box "Verifier" #F4C2C2
+participant "Mini-Program\n(Verifier)" as VMP
+participant "Mini-Program\nBackend" as VMPB
+end box
+
+== Installation & Setup ==
+[-> SAC: InstallSuperApp
+activate SAC
+note right of SAC #WhiteSmoke
+    Generate:
+    - Fr(~userid)
+    - Fr(~data0)
+    - Fr(~data1)
+end note
+SAC -> SAB: Register User(userid, data0, data1)
+activate SAB
+SAB -> SAB: Store User Data
+SAB --> SAC: Registration Success
+deactivate SAB
+
+SAC -> TEE: Setup Keys
+activate TEE
+note right of TEE #WhiteSmoke
+    - Fr(~k)
+    - pkH = pk(~k)
+    - Store ~k securely
+    - Register DID Document
+end note
+TEE --> SAC: pkH
+deactivate TEE
+deactivate SAC
+
+== Mini-Program Registration ==
+[-> IMPB: Initialize Issuer Backend
+activate IMPB
+note right of IMPB #WhiteSmoke
+    Generate:
+    - Fr(~appid)
+    - Fr(~openid)
+    - Fr(~k)
+    - pkI = pk(~k)
+    - Store ~k securely
+end note
+IMPB -> SAB: Register with SuperApp Backend
+SAB --> IMPB: Registration Success
+deactivate IMPB
+
+[-> VMPB: Initialize Verifier Backend
+activate VMPB
+note right of VMPB #WhiteSmoke
+    Generate:
+    - Fr(~appid)
+    - Fr(~openid)
+    - Fr(~k)
+    - pkV = pk(~k)
+    - Store ~k securely
+end note
+VMPB -> SAB: Register with SuperApp Backend
+SAB --> VMPB: Registration Success
+deactivate VMPB
+
+== OAuth 2.0 Authorization Flow ==
+IMP -[#blue]> SAC: JSAPI:AuthCodeRequest
+SAC -> SAB: AuthCodeRequest
+SAB -> SAB: Fr(~authCode)
+SAB -> SAC: authCode
+SAC -[#blue]> IMP: authCode
+
+IMP -> IMPB: authCode
+IMPB -> SAB: token_req(appid, authCode)
+SAB -> SAB: Fr(~oauth_token)
+SAB -> IMPB: oauth_token
+IMPB -> IMPB: Store oauth_token
+
+IMPB -> SAB: TLS:accessInfoReq(appid, token)
+activate SAB
+SAB -> SAB: Query user data
+SAB --> IMPB: data0, data1
+deactivate SAB
+
+== Credential Issuance ==
+IMP -> IMPB: Request VC
+activate IMPB
+note right of IMPB #WhiteSmoke
+**Create VC:**
+1. Compute synthesized claims:
+   - C1 = fsys(data0, data1, ~n0)
+   - C2 = gsys(data0, data1, ~n1)
+   - C = C1 ++ C2
+   - digest = hc(C1) ++ hc(C2)
+2. Sign:
+   - sigJWT = <digest, sign(digest, skI)>
+   - credential = <sigJWT, C>
+3. Encrypt:
+   - Fr(~envkey)
+   - eVC = <senc(sigJWT, ~envkey),
+           aenc(~envkey, pkH)>
+end note
+IMPB -> IMP: eVC
+IMP -[#blue]> SAC: JSAPI:importVC(eVC)
+deactivate IMPB
+
+activate SAC
+SAC -> TEE: Verify & Store VC
+activate TEE
+note right of TEE #WhiteSmoke
+**Process VC with skH:**
+1. Decrypt:
+   - envkey = adec(...)
+   - sigJWT = sdec(...)
+2. Verify:
+   - checksign(signature, digest, pkI)
+3. Store credential
+end note
+TEE --> SAC: Store success
+deactivate TEE
+deactivate SAC
+
+== Credential Presentation ==
+VMP -[#blue]> SAC: JSAPI:RequestVP
+activate SAC
+SAC -> TEE: Create VP
+activate TEE
+note right of TEE #WhiteSmoke
+**Create VP with skH:**
+1. Select disclosure data
+2. Create:
+   - payload = <sigJWT, D>
+   - proof = sign(payload, skH)
+   - VP = <payload, proof>
+3. Encrypt:
+   - Fr(~envkey)
+   - VP_enc = <senc(VP, ~envkey),
+              aenc(~envkey, pkV)>
+end note
+TEE --> SAC: VP_enc
+deactivate TEE
+SAC -[#blue]> VMP: JSAPI:PresentVP(userId, VP_enc)
+deactivate SAC
+
+VMP -> VMPB: Verify VP
+activate VMPB
+note right of VMPB #WhiteSmoke
+**Verify VP with skV:**
+1. Decrypt:
+   - envkey = adec(...)
+   - VP = sdec(...)
+2. Verify signatures:
+   - checksign(proof, payload, pkH)
+   - checksign(signature, digest, pkI)
+3. Verify D is subset of digest
+end note
+VMPB --> VMP: Verification result
+deactivate VMPB
+
+@enduml

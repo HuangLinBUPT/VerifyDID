@@ -25,7 +25,8 @@ restriction Substring:
   "All a b #i. Substring(a, b)@i ==> a << b"
   */
 
-#include "../TLS.spthy"
+//#include "../TLS.spthy"
+#include "../TLS.splib"
 #include "../tactics"
 
 /*=== Phone Initialization ===*/
