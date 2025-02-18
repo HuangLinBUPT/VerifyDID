@@ -1,0 +1,764 @@
+theory DID
+begin
+
+builtins: natural-numbers, multiset
+
+functions: pk/1, aenc/2, adec/2, senc/2, sdec/2, sign/2, checksign/3, true/0,
+// Selective Discloure
+hc/1,
+fsys/1, gsys/1
+
+
+equations: sdec(senc(x, k), k) = x
+equations: adec(aenc(x, pk(k)), k) = x
+equations: checksign(sign(m, k), m, pk(k)) = true
+
+restriction equal:
+  "All a b #i. Eq(a, b)@i ==> a = b"
+
+restriction Substring:
+  "All a b #i. Substring(a, b)@i ==> a << b"
+
+
+#include "TLS.splib"
+#include "./mytactics"
+ 
+
+
+rule JSAPIOut[color=#FFFFFF]:
+    [ JSAPI_Out(NameAPI, id, msg) ]
+    -->
+    [ !JSAPI(NameAPI, id, msg) ]
+
+rule Z_JSAPICompromised[color=#FF6961]:
+    [ !JSAPI(NameAPI, id, msg) ]
+  --[ MaliciousProgram(NameAPI, id)
+      , AdversaryActivity() ]->
+    [ Out(<id, msg>) ]
+
+rule AdversaryJSAPI_out[color=#FFFFFF]:
+    [ In(NameAPI), In(id), In(msg) ]
+  --[ MaliciousProgram(NameAPI, id)
+    , AdversaryActivity() ]->
+    [ !JSAPI(NameAPI, id, msg) ]
+
+rule JSAPIIn[color=#FFFFFF]:
+    [ !JSAPI(NameAPI, id, msg) ]
+    --[ JSAPIgenerate(msg) ]->
+    [ JSAPI_In(NameAPI, id, msg) ]
+
+
+//// Phone Initialization ////
+rule Phone[color=#004225]:
+    []
+  --[ ClaimNumber($A, $Number)
+    , IsPhoneNumber($Number) ]->
+    [ !Phone($A, $Number) ]
+
+
+//// Install SuperApp client ////
+//
+// An OpenID is a unique identifier for Alipay 
+// users at the application level. When Alipay 
+// users access different applications such as 
+// mini-programs, web-based mobile applications, 
+// or Official Accounts, a unique OpenID is generated.
+rule InstallSuperAppClient[color=#A3C1AD]:
+    [ !Phone($UserName, $Number)
+    , Fr(~userid)
+    , Fr(~data0)
+    , Fr(~data1)
+    , Fr(~k) ]
+  --[ InstallSuperApp($UserName, $Number, ~userid)
+    , DataBase(~userid, ~data0, ~data1) ]->
+    [ !SuperApp($UserName, $Number, ~userid)
+    , !Server($UserName, $Number, ~userid) 
+    , !DB(~userid, ~data0, ~data1) ]
+
+
+restriction uniqueUserAccount:
+    "All name1 name2 number1 number2 userid1 userid2 #i #j.
+        InstallSuperApp(name1, number1, userid1)@i  & InstallSuperApp(name2, number2, userid2)@j
+        ==> #i = #j & name1 = name2 & number1 = number2 & userid1 = userid2
+    "
+
+
+rule SuperAppSetUp:
+    [ Fr(~k)
+    , !SuperApp($userName, $Number, userid) ]
+  --[ SetupKey(userid, ~k)
+    , RegisterDIDdocument($Holder, $context, pk(~k)) ]->
+    [ !TEELTK($Holder, userid, ~k)
+    , !TEEPK($Holder, userid, pk(~k))
+    , !DID(<'context', $context>, <'id', $Holder>, <'auth', pk(~k)>) 
+    , Out(pk(~k)) ]
+
+
+restriction uniquClientKey:
+    "All userid k1 k2 #i #j.
+      SetupKey(userid, k1)@i & SetupKey(userid, k2)@j ==> #i = #j
+    "
+
+
+/* A several attack, where the private key is leaked. */
+rule RevealSuperAppKey[color=#E52B50]:
+    [!TEELTK($Holder, userid, k)]
+  --[ CompromiseTEE(userid),
+      AdversaryActivity() ]->
+    [ Out(k)  ]
+
+
+/** The sensitive data can be leaked */
+rule LeakSenstiveData[color=#E52B50]:
+    [ !DB(userid, data0, data1)  ]
+  --[ LeakData(userid, data0),
+      LeakData(userid, data1),
+      AdversaryActivity() ]->
+    [ Out(data0)
+    , Out(data1) ]
+
+ 
+
+//// Anouymous openid for different mini-programs ////
+// Furthermore, for the same user, the OpenID differs 
+// across various applications. For instance, the OpenID 
+// for the same user will vary between different mini-
+// programs, and similarly, it will differ across various
+// web-based mobile applications.
+rule MiniprogramRegister[color=#FFF8E7]:
+    [ Fr(~appid)
+    , Fr(~openid)
+    , Fr(~k)
+    , !SuperApp($UserName, $Number, ~userid)]
+  --[ MiniprogramRegister($A, ~userid, ~appid) ]->
+    [ !MiniProgram($A, ~openid, ~appid)  // The miniProgram `appid` is register within SuperApp $A, whose identifier is masked as `openid`
+    , !MLTK($A, ~appid, ~k)
+    , !MPK($A, ~appid, pk(~k))
+    , Out(pk(~k))
+    , !DID(<'context', $context>, <'id', $A>, <'auth', pk(~k)>) ]
+
+
+rule RevealMiniProgramPrivKey[color=#E52B50]:
+  [ !MLTK($A, appid, ltk)]
+--[ Reaveal(appid, ltk),
+    AdversaryActivity() ]->
+  [ Out(<appid, ltk>)  ]
+
+
+//// Oauth 2.0 authCode flow ////
+rule AuthCodeRequest[color=#FDD5B1]:
+    [ !MiniProgram($Issuer, openid, appid)
+    , !SuperApp($UserName, $Number, ~userid)
+    , Fr(~sess) ]
+  --[ Issuer(appid)
+    , LIssurerAuthCodeRequest($Issuer, appid) ]->
+    [ St_MP_AuthCodeReq($Issuer, ~sess, openid, appid)
+    , TLSClient_Out('GET', ~sess, $Issuer, <'userInfo', appid, 'req'>) ]
+
+
+rule SuperAppGenerateAuthCode[color=#6495ED]:
+    [ TLSServer_In('GET', ~sess, $Issuer, <'userInfo', appid, 'req'>)
+    , !SuperApp($UserName, $Number, userid)
+    , Fr(~authCode) ]
+  --[ LAuthCodeGenerate(userid, ~authCode)
+    , IsSession(~sess)
+    , InitSession(~sess)
+    , MustIssuer(appid) ]->
+    [ TLSServer_Out('GET', ~sess, $Issuer, <'authCode', appid, ~authCode>)
+    , St_SA_IssueCode($UserName, $Issuer, appid, ~authCode)
+    , AuthCode(~authCode)  ]
+
+
+restriction legalInitalReq:
+  "not ( Ex sess #i #j. InitSession(sess)@i & KU(sess)@j )
+  "
+
+// Here we make an abstraction. In practice, the authcode
+// is first redirected to the web frontend of Mini-program,
+// then it is transmitted to backend via HTTPS.
+// We do not consider the adversary behavior within the
+// transmission, therefore merge them within one MSR rule.
+rule MPgetAuthCode[color=#FDD5B1]:
+    [ St_MP_AuthCodeReq($Issuer, sess, openid, appid)
+    , TLSClient_In('GET', sess, $Issuer, <'authCode', appid, authCode>)
+    , Fr(~sessPost) ]
+  --[ LMFGetAuthCode($Issure, appid, authCode)
+    , StartSession(~sessPost)
+    , IsAuthCode(authCode) ]->
+    [ St_MP_TokenReq($Issuer, openid, appid, authCode)
+    , TLSClient_Out('POST', ~sessPost, $Issuer, <'token_req', appid, authCode>) ]
+
+
+rule SuperAppAuthEndPointGenerateToken[color=#6495ED]:
+    [ TLSServer_In('POST', ~sess, $Issuer, <'token_req', appid, authCode>)
+    , St_SA_IssueCode($UserName, $Issuer, appid, authCode)
+    , !SuperApp($UserName, $Number, userid)
+    , Fr(~token) ]
+  --[ IsSession(~sess)
+    , UseCode($Issuer, authCode)  ]->
+    [ TLSServer_Out('POST', ~sess, $Issuer, <'token_consume', appid, ~token>)
+    , St_SA_DistributeToken($UserName, $Issuer, appid, ~token)
+    , Token(~token)  ]
+
+
+rule MBCallInfoShareAPI[color=#FDFD96]:
+    [ St_MP_TokenReq($Issuer, openid, appid, authCode)
+    , TLSClient_In('POST', ~sess, $Issuer, <'token_consume', appid, token>)
+    , Fr(~sessCall) ]
+  --[ IsSession(~sess)
+    , StartSession(~sessCall) ]->
+    [ St_MB_CallInfoShare($Issuer, openid, appid, token)
+    , TLSClient_Out('GET', ~sessCall, $Issuer, <'accessInfoReq', appid, token>) ]
+
+
+
+rule SuperAppReturnValue[color=#6495ED]:
+    [ TLSServer_In('GET', ~sess, $Issuer, <'accessInfoReq', appid, token>)
+    , St_SA_DistributeToken($UserName, $Issuer, appid, token)
+    , !DB(userid, data0, data1)]
+  --[ IsSession(~sess)
+    , IsToken(token)  ]->
+    [ TLSServer_Out('GET', ~sess, $Issuer, <'accessInfo', appid, <data0, data1>>)]
+
+
+
+rule MBgetSentitiveData[color=#FDFD96]:
+    [ St_MB_CallInfoShare($Issuer, openid, appid, token)
+    , TLSClient_In('GET', ~sess, $Issuer, <'accessInfo', appid, <data0, data1>>)]
+  --[ LMBGetSensitiveData(appid, <data0, data1>)
+    , IsSession(~sess) ]->
+    [ !MBDB($Issuer, openid, appid, <data0, data1>) ]
+
+
+
+//// Selective Disclosure ////
+//  
+// <Issuer-signed JWT>~<Disclosure 1>~<Disclosure 2>~...~<Disclosure N>~ 
+// An SD-JWT+KB with Disclosures:
+// <Issuer-signed JWT>~<Disclosure 1>~<Disclosure N>~<KB-JWT>
+// Each digest value ensures the integrity of, and maps to, the respective Disclosure.
+// Digest values are calculated using a hash function over the Disclosures, 
+// each of which contains a cryptographically secure random salt, 
+// the claim name (only when the claim is an object property), and the claim value.
+rule MBConstructCredential[color=#FDFD96]: 
+    let
+      //// synthesized claims fron userinfo /////
+      C1 = fsys(data0, data1, ~n0)
+      C2 = gsys(data0, data1, ~n1)
+      C = C1 ++ C2
+      digest = hc(C1) ++ hc(C2)
+      sigJWT = <digest, sign(digest, skI)>
+      credential = <sigJWT, C>
+      eenvkey = aenc(~envkey, pkH)
+      eVC = <senc(sigJWT, ~envkey), eenvkey>
+    in
+    [ !MBDB($Issuer, openid, appid, <data0, data1>)
+    , !MLTK($Issuer, appid, skI)
+    , !TEEPK($Holder, userid, pkH)
+    , Fr(~n0)
+    , Fr(~n1)
+    , Fr(~envkey)
+    , Fr(~sess) ]
+  --[ SignJWT(sigJWT)
+    , SynClaims(C)
+    , IssueVC(appid, credential)
+    , StartSession(~sess)
+    , LCredentialIssurance($Issuer, appid, eVC) ]->
+    [ Receipt0(~n0, ~n1)
+      /* 
+      * Here we make a similar abstraction as above.
+      * We consider the transmit of VC from mini-program
+      * to super app, without accounting for how the 
+      * VC is transmitted from the frontend to the backend.
+      */
+    , JSAPI_Out('importVC', appid, eVC) ]
+
+  
+
+rule SuperAppStoreVC[color=#6495ED]:
+    let 
+      pkH = pk(skH)
+      C1 = fsys(data0, data1, n0)
+      C2 = gsys(data0, data1, n1)
+      C = C1 ++ C2
+      digest = hc(C1) ++ hc(C2)  
+      sigJWT = <digest, signature>
+      credential = <sigJWT, C> 
+      eenvkey = aenc(envkey, pkH)
+      eVC = <senc(sigJWT, envkey), eenvkey>
+    in
+    [ JSAPI_In('importVC', appid, eVC)
+    , Receipt0(n0, n1)
+    , !SuperApp($UserName, $Number, userid)
+    , !MPK($Issuer, appid, pkI)
+    , !TEELTK($Holder, userid, skH)
+    , !DB(userid, data0, data1) ]
+  --[ Eq(checksign(signature, digest, pkI), true)
+    , StoreVC(userid, credential)
+    , SuperAppVC(userid, eVC, credential)
+    , LSuperAppStoreVC(userid, eVC, credential)  ]->
+    [ !VC(userid, credential) ]
+
+
+restriction UniqueVCstore:
+  "All #i #j userid d1 d2 credential.
+      SuperAppVC(userid, d1, credential) @ #i & SuperAppVC(userid, d2, credential) @ #j
+      ==> #i = #j
+  "
+
+//// VP Construction ////    
+rule PresentationRequest[color=#F4C2C2]:
+    [ !MiniProgram($Verifier, openid, appid)
+    , Fr(~sess)
+    , Fr(~ShowReq) ]
+  --[ Verifier(appid)
+    , LVerifierShowPreReq($Verifier, appid, ~ShowReq)  ]->
+    [ St_MF_PresentReq($Verifier, openid, appid)
+    , JSAPI_Out('RequestVP', appid, 'request_VP') ]
+
+
+
+// We assume that a mini-program is either a verifier or an issuer
+restriction UniqueRole:
+    "not ( Ex #i #j appid.
+          Issuer(appid)@i & Verifier(appid)@j )
+    "
+
+// SuperApp constructs a VP and send encrypted VP to SuperApp backend
+rule SuperAppConstructVPwithDisclosure[color=#6495ED]:
+    let 
+      C = P ++ D
+      credential = <sigJWT, C> 
+      payload = <sigJWT, D>
+      proof = sign(payload, skH)
+      VP = <payload, proof>
+      eenvkey = aenc(~envkey, pkV)
+      eVP = senc(VP, ~envkey)
+      encVP = <eVP, eenvkey>
+    in
+    [ JSAPI_In('RequestVP', appid, request_VP) 
+    , !SuperApp($UserName, $Number, userid)
+    , !TEELTK($Holder, userid, skH)
+    , !MPK($Verifier, appid, pkV)
+    , !VC(userid, credential)
+    , Fr(~envkey)
+    ]
+  --[ LHolderPresentVP(userid, appid, VP)
+    , VPrequestFrom(appid)
+    , CredentialPresent($UserName, VP)
+    , HolderPresent(userid, VP) ]->
+    [ St_SA_EncVP($UserName, userid, appid, encVP) ]  // Only send encVP to backend
+
+// SuperApp backend receives the encrypted VP and generate a VPtoken
+rule SuperAppGenVPtoken[color=#6495ED]:
+    let
+      vpToken = <~tokenId, encVP>
+    in
+    [ St_SA_EncVP($UserName, userid, appid, encVP)
+    , Fr(~tokenId) ]
+  --[ VPtokenGenerated(userid, appid, vpToken)
+    , IsVPtoken(vpToken) ]->
+    [ !VPtoken_Enc(vpToken, encVP)  // Store mapping of token to encrypted VP
+    , St_SA_SendToken($UserName, userid, appid, vpToken) ]
+
+// SuperApp client receives the VPtoken and sends it to the mini-program
+// through the JSAPI
+rule SuperAppSendVPtoken[color=#6495ED]:
+    [ St_SA_SendToken($UserName, userid, appid, vpToken) ]
+  --[ VPtokenSent(userid, appid, vpToken) ]->
+    [ JSAPI_Out('PresentVP', appid, <$UserName, vpToken>) ]
+
+// Verifier mini-program receives the VPtoken and sends it to the backend
+// through TLS
+rule VerifierReceiveVPtoken[color=#F4C2C2]:
+    let
+      vpToken = <tokenId, encVP>
+    in
+    [ St_MF_PresentReq($Verifier, openid, appid)
+    , JSAPI_In('PresentVP', appid, <UserName, vpToken>) ]
+  --[ VPtokenReceived($Verifier, appid, vpToken) ]->
+    [ St_MF_GetVP($Verifier, openid, appid, UserName, vpToken) ]
+
+// Verifier backend use the VPtoken to get the VP
+#ifdef goal3 & replay
+// For goal3 and replay attack analysis, we don't require state
+rule MBVerifyPresentation[color=#F4C2C2]:
+    let 
+      vpToken = <tokenId, encVP>
+      pkV = pk(skV)
+      eVP = fst(encVP)
+      eenvkey = snd(encVP)
+      envkey = adec(eenvkey, skV)
+      VP = sdec(eVP, envkey)
+      sigJWT = <digest, signature>
+      payload = <sigJWT, D>
+    in
+    [ JSAPI_In('PresentVP', appid, <UserName, vpToken>)
+    , !VPtoken_Enc(vpToken, encVP)
+    , !MLTK($Verifier, appid, skV) 
+    , !MPK($Issuer, IssueID, pkI)
+    , !TEEPK($Holder, userid, pkH) ]
+  --[ Eq(VP, <payload, proof>)  // Check decryption yields valid VP
+    , Eq(checksign(proof, payload, pkH), true)
+    , Eq(checksign(signature, digest, pkI), true)
+    , Substring(hc(D), digest)
+    , GetRights(UserName)
+    , PassVerify(appid, vpToken)
+    , LPresentationVerify($Verifier, appid, payload, VP) ]->
+    [ ]
+
+#else
+// Default case - normal verification with state tracking
+rule MBVerifyPresentation[color=#F4C2C2]:
+    let 
+      vpToken = <tokenId, encVP>
+      pkV = pk(skV)
+      eVP = fst(encVP)
+      eenvkey = snd(encVP)
+      envkey = adec(eenvkey, skV)
+      VP = sdec(eVP, envkey)
+      sigJWT = <digest, signature>
+      payload = <sigJWT, D>
+    in
+    [ St_MF_GetVP($Verifier, openid, appid, UserName, vpToken)
+    , !VPtoken_Enc(vpToken, encVP)
+    , !MLTK($Verifier, appid, skV) 
+    , !MPK($Issuer, IssueID, pkI)
+    , !TEEPK($Holder, userid, pkH) ]
+  --[ Eq(VP, <payload, proof>)  // Check decryption yields valid VP
+    , Eq(checksign(proof, payload, pkH), true)
+    , Eq(checksign(signature, digest, pkI), true)
+    , GetRights(UserName)
+    , Substring(hc(D), digest)
+    , VPGetPass(appid, payload, VP)
+    , PassVerify(appid, vpToken)
+    , LPresentationVerify($Verifier, appid, payload, VP) ]->
+    [ ]
+#endif
+
+restriction UniqueVPreqfrom:
+  "All #i #j app. 
+    VPrequestFrom(app) @ #i &  VPrequestFrom(app) @ #j
+    ==> #i = #j
+  "
+
+
+// A holder may possess multiple VP.
+// Fact `LHolderPresentVP` states that the holder
+// `userid` presents a `VP` to the verifier `app`. 
+// We assume that for a specific verifier, the VP is specific.
+restriction UniqueVP:
+  "All #i #j userid app VP1 VP2.
+      LHolderPresentVP(userid, app, VP1) @ #i & LHolderPresentVP(userid, app, VP2) @ #j 
+      ==> #i = #j & VP1 = VP2
+  "
+
+
+lemma SourcesID[sources]:
+    "All appid #i. MustIssuer(appid)@i
+      ==>
+        (Ex #h. KU(appid) @ #h & #h < #i)
+      | (Ex #h. Issuer(appid) @ #h)"
+
+
+
+// We assume that only one issuer.
+// We assume for the same appid ,there is only
+// on thread of verifier.
+
+// A credential (VC） can be used to construct 
+// unbounded number of VP. We do not restrict this feature.
+restriction SingleIssuerVerifier:
+    " (All appid1 appid2 #i #j. Issuer(appid1)@i & Issuer(appid2)@j
+      ==> #i = #j )
+    & (All appid #i #j. Verifier(appid)@i & Verifier(appid)@j
+      ==> #i = #j )
+    "
+
+
+
+#ifdef exec
+restriction AuthCodeReqOnce:
+    "All Issuer appid #i #j.
+      LIssurerAuthCodeRequest(Issuer, appid)@i & LIssurerAuthCodeRequest(Issuer, appid)@j
+      ==> #i = #j
+    "
+
+    
+restriction OnceConstructionVC:
+    "All Issuer appid VC1 VC2 #i #j.
+      LCredentialIssurance(Issuer, appid, VC1)@i & LCredentialIssurance(Issuer, appid, VC2)@j
+      ==> #i = #j
+    "
+
+
+
+// Here is an abstract for non-replay in TLS
+restriction uniqueClientToServer:
+    "All sess msg #i #j.
+      TLSClientToServer(sess, msg)@i & TLSClientToServer(sess, msg)@j
+      ==> #i = #j
+    "
+
+restriction uniqueJSAPI:
+    "All msg #i #j.JSAPIgenerate(msg)@i & JSAPIgenerate(msg)@j
+      ==> #i = #j
+    "
+
+restriction uniqueServerToClient:
+    "All sess msg #i #j.
+      TLSServerToClient(sess, msg)@i & TLSServerToClient(sess, msg)@j
+      ==> #i = #j
+    "
+
+
+lemma Executability:
+  exists-trace
+  "Ex issuer appI verifier appV 
+      userid authCode
+      cred VCdata payload ShowReq VP
+      #t0 #t1 #t2 #t3 #t4 #t5 #t6 #t7.
+      LIssurerAuthCodeRequest(issuer, appI)@t0
+    & LAuthCodeGenerate(userid, authCode)@t1
+    & LMFGetAuthCode(issuer, appI, authCode)@t2
+    & LCredentialIssurance(issuer, appI, VCdata)@t3
+    & LSuperAppStoreVC(userid, VCdata, cred)@t4
+    & LVerifierShowPreReq(verifier, appV, ShowReq)@t5
+    & LHolderPresentVP(userid, appV, VP)@t6
+    & LPresentationVerify(verifier, appV, payload, VP)@t7
+    & (not Ex #x. AdversaryActivity() @ #x)"
+#endif
+
+
+//// Goal 1 ////
+#ifdef goal1
+lemma SanityCheckCodeSecrcy:
+    exists-trace
+    "Ex r code #t1 #t2.
+      UseCode(r, code) @ #t1 &  KU(code) @ #t2"
+    
+lemma SanityCheckTokensecrcy:
+    exists-trace
+    "Ex token #t1 #t2.
+      IsToken(token) @ #t1 &  KU(token) @ #t2"
+
+
+lemma CodeSecrecy[reuse, heuristic={CodeSecrecy}]:
+    "All issuer code #t1 #t2.
+      ( UseCode(issuer, code) @ #t1
+      & KU(code) @ #t2  )
+      ==> 
+        (Ex #x. CompromisedDomain(issuer) @ #x)
+    "
+
+lemma TokenSecrecy[reuse, heuristic={TokenSecrecy}]:
+    "All #i #j token. 
+      IsToken(token)@i & KU(token)@j
+      ==>
+        (Ex r #x. CompromisedDomain(r) @ #x)
+    "
+
+
+//// Goal 1 Secrecy of claims that used in credential ////
+//
+// This is a stronger secrecy lemma, which states that
+// if all the intended claims used for the construction
+// of the credential are known by an adversary, then
+// either there exists a data leak from the database,
+// or some client of the TLS session is compromised.
+// 
+// This lemma is falsified (now verified, as I add C4)
+// because the disclosure claims can be obtained from
+// the presentation of VP, when the master (encrypted)
+// key of the verifier is leaked.
+// 
+// An interesting finding, which I believe can be seen
+// as a potential attack:
+// - Consider two different VPs constructed from one
+//   credential, where the payloads of VP are:
+//   - p1 = Issuer_signed_JWT ++ disclosure1
+//   - p2 = Issuer_signed_JWT ++ disclosure2
+// - If cred = Issuer_signed_JWT ++ disclosure1 ++
+//   disclosure2, then all the claims can be obtained
+//   from the attack on the presentation of such two
+//   VPs.
+// - The attack succeeds when the master keys of the
+//   two verifiers are leaked.
+lemma userinfoSecrecy[heuristic={claimSecrecy}, reuse]:
+    "All #i userid data0 data1.
+        DataBase(userid, data0, data1)@i
+        ==>
+          not (Ex #k #j. KU(data0)@j & KU(data1)@k)
+        /* C1: Some client of a TLS session is compromised. */
+        | ( Ex r #x. CompromisedDomain(r) @ #x)
+        /* C2: The userinfo is leaked directly from the database. */
+        | ( Ex #i data. LeakData(userid, data)@ #i)
+    "
+
+lemma risk1[heuristic={claimSecrecy}]:
+    "All userid VC #j. StoreVC(userid, VC)@j
+      ==>
+          not (Ex #j. K(VC)@j)
+          /* C1: There must be a TEE compromised */
+          | ( Ex r #x. CompromisedDomain(r) @ #x)
+          | ( Ex #i #j #m app userid.
+                MaliciousProgram('importVC', app)@i
+              & Issuer(app)@m
+              & CompromiseTEE(userid)@j ) 
+    "
+
+lemma claimsSecrecy[reuse, heuristic={claimSecrecy}]:
+    "All #i C.
+        SynClaims(C)@i
+        ==>
+          not (Ex #j. KU(C)@j)
+        | ( Ex r #x. CompromisedDomain(r) @ #x)
+        | ( Ex #i #j #m app userid.
+              MaliciousProgram('importVC', app)@i
+            & Issuer(app)@m
+            & CompromiseTEE(userid)@j ) 
+        | ( Ex #i #j app1 app2. 
+              MaliciousProgram('PresentVP', app1) @ #i
+            & MaliciousProgram('PresentVP', app2) @ #j
+            & not(app1 = app2))
+    "
+
+
+lemma VCSecrecy[heuristic={secrecyOfCredential}]:
+    "All userid VC #j. StoreVC(userid, VC)@j
+      ==>
+          not (Ex #j. K(VC)@j)
+          //// C1: There must be a TEE compromised ////
+          | ( Ex #i. CompromiseTEE(userid)@i ) 
+          // If there is no TEE compromised, then all the claims should
+          // be obtained. Both C2.1 and C2.2 depicts how all the claims
+          // can be known by the adversary, i.e.,
+          //// C2: there exists some TLS session unsecured ////
+          | ( Ex r #x. CompromisedDomain(r) @ #x)
+          // C3 is a more subtle way to recover credential, it does not need any explict data leak. 
+          // it states that:
+          // C3: the complete credential can be recovered from all the VP ////
+          // more specifically, if all the verifiers' secrecy key is leaked, the attack indeed work.
+          | ( Ex #i #j app1 app2. 
+                  MaliciousProgram('PresentVP', app1) @ #i
+                & MaliciousProgram('PresentVP', app2) @ #j
+                & not(app1 = app2))"
+#endif
+
+
+//// Goal 2: Integrity ////
+// The Issuer should be legal, otherwise, VC is forgeable.
+#ifdef goal2
+
+lemma VCIntegrity[hide_lemma=NonInjectAuthVCIssurance, heuristic={integrity}]:
+    "All #i userid data credential.
+      SuperAppVC(userid, data, credential)@i
+      ==>
+        (Ex #j appid.
+          IssueVC(appid, credential)@j & #j < #i) 
+      | (Ex appid ltk #i. Reaveal(appid, ltk)@i)
+    "
+#endif
+
+ 
+
+//// Goal3 ////
+// There is no replay attack of VP:
+// Different verifier (with different appid) accept different VP
+// and there is only one time presentation, which corresponds to restriction UniqueVP
+// We can use informal method to analyze and get a replay attack,
+// but this lemma gives us an advice how we can prevent such attack
+#ifdef goal3
+lemma UniquePass[heuristic={UniquePass}]:
+    "All VP appid #i.
+        PassVerify(appid, VP)@i
+        ==>
+          ( Ex userid #j. 
+              HolderPresent(userid, VP)@j & #j < #i
+            & not( Ex verifier #k. PassVerify(verifier, VP)@k 
+            & not( #k = #i ) ) )
+        | ( Ex userid #i. CompromiseTEE(userid)@i ) 
+        | ( Ex appid ltk #i. Reaveal(appid, ltk)@i)
+    "
+
+#endif
+
+
+////  Goal 4: Legal Presentation  ////
+//  The wallet used by the End-User to present the credentials is the
+//  same wallet to which the credentials have been issued
+//
+// This lemma is falsified, which corresponds to the risk3 in our manuscript
+// To recover the attack, we use UserName to represent the identity of the
+// holder, who then gets rights after passing the verification of credential
+#ifdef goal4
+lemma LegalPresentation:
+    "All #i UserName.
+        GetRights(UserName)@i 
+        ==>   
+          ( Ex #j VP. CredentialPresent(UserName, VP)@j & #j < #i)
+        | ( Ex r #x. CompromisedDomain(r) @ #x) 
+        | ( Ex userid #i. CompromiseTEE(userid)@i ) 
+        | ( Ex appid ltk #i. Reaveal(appid, ltk)@i)
+    "
+#endif
+
+
+
+//// Goal 5 ////
+// After verifying the presentation of a certain
+// credential, the verifier can only obtain claims
+// that are a subset of the claims contained within
+// the credential issuance.
+#ifdef goal5
+predicate:
+    Originates(VP, VC) 
+    <=> 
+      (Ex prefix D d. VC = <prefix, D> & VP = <prefix, d> & d << D)
+
+
+
+lemma weakest_SelectiveDisclosure:
+    "All #i appid payload VP.
+        VPGetPass(appid, payload, VP)@i
+        & (not Ex #x. AdversaryActivity() @ #x)
+        ==>
+        Ex userid VC #j. StoreVC(userid, VC)@j & Originates(payload, VC)
+    "
+
+
+
+lemma sd_auth_storeVC[heuristic={authStoreVC}, reuse]:
+  "All #i appid payload VP.
+    VPGetPass(appid, payload, VP)@i
+    ==>
+      (Ex userid VC #j. StoreVC(userid, VC)@j 
+       & Originates(payload, VC))
+    | (Ex userid #x. CompromiseTEE(userid)@x )
+  "
+
+
+lemma auxlemma[heuristic={integrity}, reuse]:
+    /* The property is formalize as an non-injective agreement */
+    "All #i userid data credential.
+      SuperAppVC(userid, data, credential)@i
+      ==>
+        (Ex #j appid.
+          IssueVC(appid, credential)@j & #j < #i) 
+      | (Ex appid ltk #i. Reaveal(appid, ltk)@i )
+    "
+
+
+
+lemma sd_auth_issueVC[heuristic={SelectiveDisclosure}]:
+    "All #i appid payload VP.
+      VPGetPass(appid, payload, VP)@i
+      ==>
+      (Ex userid VC #j. IssueVC(userid, VC)@j
+          & Originates(payload, VC))
+      | (Ex appid ltk #i. Reaveal(appid, ltk)@i)
+    "
+
+#endif
+
+end
