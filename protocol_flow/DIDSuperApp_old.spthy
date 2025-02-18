@@ -178,7 +178,7 @@ rule MPgetAuthCode[color=#FDD5B1]:
   [ St_MP_AuthCodeReq($Issuer, sess, openid, appid)
 	,	TLSClient_In('GET', sess, $Issuer, <'authCode', appid, authCode>)
 	,	Fr(~sessPost) ]
---[ LMFGetAuthCode($Issuer, appid, authCode)
+--[ LMFGetAuthCode($Issure, appid, authCode)
   , StartSession(~sessPost)
   , IsAuthCode(authCode) ]->
   [ St_MP_TokenReq($Issuer, openid, appid, authCode)

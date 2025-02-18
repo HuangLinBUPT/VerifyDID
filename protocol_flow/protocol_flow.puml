@@ -1,0 +1,190 @@
+@startuml
+
+skinparam ParticipantPadding 20
+skinparam BoxPadding 10
+skinparam SequenceMessageAlign center
+
+' Define styles
+skinparam sequenceMessageAlign center
+skinparam ArrowColor black
+skinparam NoteBackgroundColor WhiteSmoke
+skinparam NoteFontSize 11
+skinparam ParticipantFontSize 13
+skinparam ParticipantFontColor black
+skinparam NoteFontColor #333333
+skinparam SequenceGroupFontSize 13
+skinparam SequenceGroupHeaderFontColor #333333
+
+box "SuperApp Data Region" #6495ED
+participant "SuperApp\nBackend" as SAB
+database "User Data" as DB
+end box
+
+box "Holder" #lightgreen
+participant "SuperApp\nClient" as SAC
+participant "TEE" as TEE
+end box
+
+box "Issuer" #FDD5B1
+participant "Mini-Program\n(Issuer)" as MP
+participant "Mini-Program\nBackend" as MPB
+end box
+
+box "Verifier" #F4C2C2
+participant "Mini-Program\n(Verifier)" as VMP
+participant "Mini-Program\nBackend" as VMPB
+end box
+
+== Installation & Setup ==
+[-> SAC: InstallSuperApp
+activate SAC
+note right: Generate userid:\nFr(~userid)
+SAC -> SAB: Register User
+activate SAB
+note right
+Generate user data:
+Fr(~sensitiveData)
+Fr(~disclosure)
+end note
+SAB -> DB: Store User Data
+SAB --> SAC: Registration Success
+deactivate SAB
+
+SAC -> TEE: Setup Keys
+activate TEE
+note right
+Generate Holder keys:
+- Fr(~skH)
+- pkH = pk(~skH)
+Register DID Document
+end note
+TEE --> SAC: pkH
+deactivate TEE
+deactivate SAC
+
+== Mini-Program Registration ==
+[-> MPB: Initialize Issuer Backend
+activate MPB
+note right
+Generate Issuer identity:
+- Fr(~skI)
+- pkI = pk(~skI)
+- Fr(~appid)
+- Store skI securely
+end note
+MPB -> SAB: Register with SuperApp Backend
+SAB --> MPB: Registration Success
+MPB -> MP: Configure Frontend (appid, pkI)
+deactivate MPB
+
+[-> VMPB: Initialize Verifier Backend
+activate VMPB
+note right
+Generate Verifier identity:
+- Fr(~skV)
+- pkV = pk(~skV)
+- Fr(~appid)
+- Store skV securely
+end note
+VMPB -> SAB: Register with SuperApp Backend
+SAB --> VMPB: Registration Success
+VMPB -> VMP: Configure Frontend (appid, pkV)
+deactivate VMPB
+
+== OAuth 2.0 Authorization Flow ==
+MP -[#blue]> SAC: JSAPI:AuthCodeRequest
+activate SAC
+note right: Fr(~authCode)
+SAC --> MP: authCode
+deactivate SAC
+
+MP -> MPB: token_req(appid, authCode)
+activate MPB
+note right: Fr(~token)
+MPB --> MP: token_consume(appid, ~token)
+deactivate MPB
+
+MP -> MPB: accessInfoReq(appid, token)
+activate MPB
+MPB -> SAB: TLS:Request user data
+activate SAB
+note right: Verify token
+SAB -> DB: Query user data
+DB --> SAB: disclosure, sensitiveData
+SAB --> MPB: disclosure, sensitiveData
+deactivate SAB
+MPB --> MP: accessInfo(appid, disclosure, sensitiveData)
+deactivate MPB
+
+== Credential Issuance ==
+MP -> MPB: Store data
+activate MPB
+note right
+Create VC with skI:
+1. Compute:
+   - digest = hash(disclosure) ++ 
+     hash(sensitiveData)
+   - signature = sign(digest, skI)
+   - JWT = <digest, signature>
+2. Generate ~envelope_key
+3. Encrypt:
+   - VC = <senc(JWT, envelope_key),
+          aenc(envelope_key, pkH)>
+end note
+MPB -[#blue]> SAC: JSAPI:importVC(VC)
+deactivate MPB
+
+activate SAC
+SAC -> TEE: Verify & Store VC
+activate TEE
+note right
+Process VC with skH:
+1. Decrypt:
+   - envelope_key = adec(...)
+   - JWT = sdec(...)
+2. Verify:
+   - checksign(signature, digest, pkI)
+3. Store credential
+end note
+TEE --> SAC: Store success
+deactivate TEE
+deactivate SAC
+
+== Credential Presentation ==
+VMP -[#blue]> SAC: JSAPI:RequestVP with pkV
+activate SAC
+SAC -> TEE: Create VP
+activate TEE
+note right
+Create VP with skH:
+1. Select disclosure
+2. Create:
+   - payload = <JWT, disclosure>
+   - proof = sign(payload, skH)
+   - VP = <payload, proof>
+3. Encrypt:
+   - Fr(~envelope_key)
+   - VP_enc = <senc(VP, envelope_key),
+              aenc(envelope_key, pkV)>
+end note
+TEE --> SAC: VP_enc
+deactivate TEE
+SAC -[#blue]> VMP: JSAPI:PresentVP(VP_enc)
+deactivate SAC
+
+VMP -> VMPB: Verify VP
+activate VMPB
+note right
+Verify VP with skV:
+1. Decrypt:
+   - envelope_key = adec(...)
+   - VP = sdec(...)
+2. Verify signatures:
+   - checksign(proof, payload, pkH)
+   - checksign(signature, digest, pkI)
+3. Verify disclosure hash in digest
+end note
+VMPB --> VMP: Verification result
+deactivate VMPB
+
+@enduml

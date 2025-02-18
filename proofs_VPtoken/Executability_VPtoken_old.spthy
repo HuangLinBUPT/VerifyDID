@@ -1,0 +1,405 @@
+theory DID begin
+
+builtins: natural-numbers, multiset
+
+heuristic: o "oracleDID"
+
+functions: 
+pk/1, aenc/2, adec/2,
+senc/2, sdec/2,
+sign/2, checksign/3, true/0,
+hash/1,
+maskedID/2
+
+equations: sdec(senc(x, k), k) = x
+equations: adec(aenc(x, pk(k)), k) = x
+equations: checksign(sign(m, k), m, pk(k)) = true
+
+restriction equal:
+  "All a b #i. Eq(a, b)@i ==> a = b"
+
+restriction Substring:
+  "All a b #i. Substring(a, b)@i ==> a << b"
+
+#include "../TLS.spthy"
+#include "../tactics"
+
+/*=== Phone Initialization ===*/
+rule Phone[color=#004225]:
+  []
+  --[ ClaimNumber($A, $Number)
+    , IsPhoneNumber($Number) ]->
+  [ !Phone($A, $Number) ]
+
+rule InstallSuperAppClient[color=#a3c1ad]:
+   [  !Phone($UserName, $Number)
+   ,  Fr(~userid)
+   , Fr(~sensitiveData)
+   ,  Fr(~disclosure)
+   ,  Fr(~k) ]
+--[ InstallSuperApp($UserName, $Number, ~userid)
+  , DataBase(~userid, ~disclosure, ~sensitiveData) ]->
+   [ !SuperApp($UserName, $Number, ~userid)
+   , !Server($UserName, $Number, ~userid) 
+   , !DB(~userid, ~disclosure, ~sensitiveData) ]
+
+restriction uniqueUserAccount:
+  "All name1 name2 number1 number2 userid1 userid2 #i #j.
+      InstallSuperApp(name1, number1, userid1)@i 
+    & InstallSuperApp(name2, number2, userid2)@j
+    ==> 
+      #i = #j & name1 = name2 & number1 = number2
+    & userid1 = userid2"
+
+rule SuperAppSetUp:
+  [ !SuperApp($userName, $Number, userid)
+  , Fr(~k)  ]
+--[ SetupKey(userid, ~k)
+  , RegisterDIDdocument($Holder, $context, pk(~k)) ]->
+  [ !TEELTK($Holder, userid, ~k)
+  , !TEEPK($Holder, userid, pk(~k))
+  , !DID(<'context', $context>, <'id', $Holder>, <'auth', pk(~k)>) 
+  , Out(pk(~k)) ]
+
+restriction uniquClientKey:
+  "All userid k1 k2 #i #j.
+      SetupKey(userid, k1)@i 
+    & SetupKey(userid, k2)@j
+    ==> #i = #j"
+
+restriction legalInitalReq:
+  "not Ex sess #i #j.
+    InitSession(sess)@i & !KU(sess)@j"
+
+restriction uniqueJSAPI:
+  "All msg #i #j.
+    JSAPIgenerate(msg)@i & JSAPIgenerate(msg)@j
+    ==> #i = #j"
+
+restriction UniqueRole:
+  "not Ex #i #j appid.
+    Issuer(appid)@i & Verifier(appid)@j"
+
+restriction SingleIssuerVerifier:
+  "(All appid1 appid2 #i #j.
+    Issuer(appid1)@i & Issuer(appid2)@j
+    ==> #i = #j)
+  & (All appid #i #j.
+    Verifier(appid)@i & Verifier(appid)@j
+    ==> #i = #j)"
+
+restriction AuthCodeReqOnce:
+  "All Issuer appid #i #j.
+    LIssurerAuthCodeRequest(Issuer, appid)@i &
+    LIssurerAuthCodeRequest(Issuer, appid)@j
+    ==> #i = #j"
+
+restriction OnceConstructionVC:
+  "All Issuer appid VC1 VC2 #i #j.
+    LCredentialIssurance(Issuer, appid, VC1)@i &
+    LCredentialIssurance(Issuer, appid, VC2)@j
+    ==> #i = #j"
+
+rule RevealSuperAppKey[color=#e52b50]:
+  [!TEELTK($Holder, userid, k)]
+--[ CompromiseTEE(userid),
+    AdversaryActivity() ]->
+  [ Out(k)  ]
+
+rule LeakSenstiveData[color=#e52b50]:
+  [ !DB(userid, disclosure, sensitiveData)  ]
+--[ LeakData(userid, sensitiveData),
+    LeakData(userid, disclosure),
+    AdversaryActivity() ]->
+  [ Out(disclosure)
+  , Out(sensitiveData) ]
+
+rule MiniprogramRegister[color=#fff8e7]:
+  [ Fr(~appid)
+  , Fr(~openid)
+  , Fr(~k)
+  , !SuperApp($UserName, $Number, ~userid)]
+--[ MiniprogramRegister($A, ~userid, ~appid) ]->
+  [ !MiniProgram($A, ~openid, ~appid)
+  , !MLTK($A, ~appid, ~k)
+  , !MPK($A, ~appid, pk(~k))
+  , Out(pk(~k))
+  , !DID(<'context', $context>, <'id', $A>, <'auth', pk(~k)>) ]
+
+rule RevealMiniProgramPrivKey[color=#e52b50]:
+  [ !MLTK($A, appid, ltk)]
+--[ Reaveal(appid, ltk),
+    AdversaryActivity() ]->
+  [ Out(<appid, ltk>)  ]
+
+rule AuthCodeRequest[color=#fdd5b1]:
+  [ !MiniProgram($Issuer, openid, appid)
+  , !SuperApp($UserName, $Number, ~userid)
+  , Fr(~sess) ]
+--[ Issuer(appid)
+  , LIssurerAuthCodeRequest($Issuer, appid) ]->
+  [ St_MP_AuthCodeReq($Issuer, ~sess, openid, appid),
+    TLSClient_Out('GET', ~sess, $Issuer, <'userInfo', appid, 'req'>) ]
+
+rule SuperAppGenerateAuthCode[color=#6495ed]:
+  [ TLSServer_In('GET', ~sess, $Issuer, <'userInfo', appid, 'req'>)
+  , !SuperApp($UserName, $Number, userid)
+  , Fr(~authCode)
+  , In(%lifeTime) ]
+--[ LAuthCodeGenerate(userid, %lifeTime, ~authCode)
+  , IsSession(~sess)
+  , InitSession(~sess)
+  , MustIssuer(appid) ]->
+  [ TLSServer_Out('GET', ~sess, $Issuer, <'authCode', appid, ~authCode>)
+  , St_SA_IssueCode($UserName, $Issuer, appid, ~authCode)
+  , AuthCode(~authCode)  ]
+
+rule MPgetAuthCode[color=#fdd5b1]:
+  [ St_MP_AuthCodeReq($Issuer, sess, openid, appid)
+  , TLSClient_In('GET', sess, $Issuer, <'authCode', appid, authCode>)
+  , Fr(~sessPost) ]
+--[ LMFGetAuthCode($Issure, appid, authCode)
+  , StartSession(~sessPost)
+  , IsAuthCode(authCode) ]->
+  [ St_MP_TokenReq($Issuer, openid, appid, authCode)
+  , TLSClient_Out('POST', ~sessPost, $Issuer, <'token_req', appid, authCode>) ]
+
+rule SuperAppAuthEndPointGenerateToken[color=#6495ed]:
+  [ TLSServer_In('POST', ~sess, $Issuer, <'token_req', appid, authCode>)
+  , St_SA_IssueCode($UserName, $Issuer, appid, authCode)
+  , !SuperApp($UserName, $Number, userid)
+  , Fr(~token) ]
+--[ IsSession(~sess)
+  , UseCode($Issuer, authCode) ]->
+  [ TLSServer_Out('POST', ~sess, $Issuer, <'token_consume', appid, ~token>)
+  , St_SA_DistributeToken($UserName, $Issuer, appid, ~token)
+  , Token(~token) ]
+
+rule MBCallInfoShareAPI[color=#fdfd96]:
+  [ St_MP_TokenReq($Issuer, openid, appid, authCode)
+  , TLSClient_In('POST', ~sess, $Issuer, <'token_consume', appid, token>)
+  , Fr(~sessCall) ]
+--[ IsSession(~sess)
+  , StartSession(~sessCall) ]->
+  [ St_MB_CallInfoShare($Issuer, openid, appid, token)
+  , TLSClient_Out('GET', ~sessCall, $Issuer, <'accessInfoReq', appid, token>) ]
+
+rule SuperAppReturnValue[color=#6495ed]:
+  [ TLSServer_In('GET', ~sess, $Issuer, <'accessInfoReq', appid, token>)
+  , St_SA_DistributeToken($UserName, $Issuer, appid, token)
+  , !DB(userid, disclosure, sensitiveData)]
+--[ IsSession(~sess)
+  , IsToken(token) ]->
+  [ TLSServer_Out('GET', ~sess, $Issuer, <'accessInfo', appid, disclosure, sensitiveData>) ]
+
+rule MBgetSentitiveData[color=#fdfd96]:
+  [ St_MB_CallInfoShare($Issuer, openid, appid, token)
+  , TLSClient_In('GET', sess, $Issuer, <'accessInfo', appid, disclosure, sensitiveData>) ]
+--[ LMBGetSensitiveData(appid, <disclosure, sensitiveData>)
+  , IsSession(sess) ]->
+  [ !MBDB($Issuer, openid, appid, <disclosure, sensitiveData>) ]
+
+rule MBConstructCredential[color=#fdfd96]: 
+  let digest = hash(disclosure) ++ hash(sensitiveData)
+      Issuer_signed_JWT = <digest, sign(digest, PrivKey)>
+      credential = <Issuer_signed_JWT, disclosure ++ sensitiveData>
+      envelope_key_encrypted = aenc(~envelope_key, pubKey)
+      VC_data = <senc(Issuer_signed_JWT, ~envelope_key), envelope_key_encrypted>
+  in
+  [ !MBDB($Issuer, openid, appid, <disclosure, sensitiveData>)
+  , !MLTK($Issuer, appid, PrivKey)
+  , !TEEPK($Holder, userid, pubKey)
+  , Fr(~envelope_key)
+  , Fr(~sess) ]
+--[ LCredentialIssurance($Issuer, appid, VC_data)
+  , SignJWT(Issuer_signed_JWT)
+  , IssueVC(appid, credential)
+  , StartSession(~sess) ]->
+  [ JSAPI_Out('importVC', appid, VC_data) ]
+
+rule JSAPIOut[color=#ffffff]:
+  [ JSAPI_Out(NameAPI, id, msg) ]
+  -->
+  [ !JSAPI(NameAPI, id, msg) ]
+
+rule Z_JSAPICompromised[color=#ff6961]:
+  [ !JSAPI(NameAPI, id, msg) ]
+--[ MaliciousProgram(NameAPI, id)
+  , AdversaryActivity() ]->
+  [ Out(<id, msg>) ]
+
+rule AdversaryJSAPI_out[color=#ffffff]:
+  [ In(NameAPI), In(id), In(msg) ]
+--[ MaliciousProgram(NameAPI, id)
+  , AdversaryActivity() ]->
+  [ !JSAPI(NameAPI, id, msg) ]
+
+rule JSAPIIn[color=#ffffff]:
+  [ !JSAPI(NameAPI, id, msg) ]
+--[ JSAPIgenerate(msg) ]->
+  [ JSAPI_In(NameAPI, id, msg) ]
+
+rule SuperAppStoreVC[color=#6495ed]:
+  let pkH = pk(skH)
+      digest = hash(disclosure) ++ hash(sensitiveData)  
+      Issuer_signed_JWT = <digest, signature>
+      credential = <Issuer_signed_JWT, disclosure ++ sensitiveData> 
+      envelope_key_encrypted = aenc(envelope_key, pkH)
+      VC_data = <senc(Issuer_signed_JWT, envelope_key), envelope_key_encrypted>
+  in
+  [ JSAPI_In('importVC', appid, VC_data)
+  , !SuperApp($UserName, $Number, userid)
+  , !MPK($Issuer, appid, pkI)
+  , !TEELTK($Holder, userid, skH)
+  , !DB(userid, disclosure, sensitiveData) ]
+--[ Eq(checksign(signature, digest, pkI), true)
+  , LSuperAppStoreVC(userid, VC_data, credential)
+  , SuperAppVC(userid, VC_data, credential) ]->
+  [ !VC(userid, credential) ]
+
+rule PresentationRequest[color=#f4c2c2]:
+  [ !MiniProgram($Verifier, openid, appid)
+  , Fr(~sess)
+  , Fr(~ShowReq) ]
+--[ Verifier(appid)
+  , LVerifierShowPreReq($Verifier, appid, ~ShowReq) ]->
+  [ St_MF_PresentReq($Verifier, openid, appid)
+  , JSAPI_Out('RequestVP', appid, 'request_VP') ]
+
+rule SuperAppConstructVPwithDisclosure[color=#6495ed]:
+  let credential = <Issuer_signed_JWT, disclosure ++ sensitiveData> 
+      payload = <Issuer_signed_JWT, disclosure>
+      proof = sign(payload, skH)
+      VP_content = <payload, proof>
+      envelope_key_encrypted = aenc(~envelope_key, pkV)
+      VP_token = <senc(VP_content, ~envelope_key), envelope_key_encrypted>
+  in
+  [ JSAPI_In('RequestVP', appid, request_VP) 
+  , !SuperApp($UserName, $Number, userid)
+  , !TEELTK($Holder, userid, skH)
+  , !MPK($Verifier, appid, pkV)
+  , !VC(userid, credential)
+  , Fr(~envelope_key)
+  , Fr(~tokenId) ]
+--[ LHolderPresentVP(userid, appid, VP_content)
+  , Pair(credential, payload)
+  , VPrequestFrom(appid)
+  , CredentialPresent($UserName, VP_token)
+  , HolderPresent(userid, VP_token)
+  , StoreVPToken(~tokenId, VP_token) ]->
+  [ !VPTokenStore(~tokenId, VP_token)
+  , JSAPI_Out('PresentVP', appid, <$UserName, VP_token>) ]
+
+// Add token-specific restrictions
+restriction UniqueVPToken:
+  "All #i #j tokenId p1 p2.
+    StoreVPToken(tokenId, p1)@i & StoreVPToken(tokenId, p2)@j
+    ==> #i = #j & p1 = p2"
+
+rule VPTokenRetrieve[color=#6495ed]:
+  [ !VPTokenStore(tokenId, VP_token)
+  , In(tokenId) ]
+--[ TokenRetrieve(tokenId)
+  , RetrieveVPToken(tokenId, VP_token) ]->
+  [ Out(VP_token) ]
+
+// Add restriction for token store and retrieve sequence
+restriction TokenStoreRetrieve:
+  "All #i tokenId p1.
+    RetrieveVPToken(tokenId, p1)@i
+    ==> Ex #j. StoreVPToken(tokenId, p1)@j & #j < #i"
+
+// Enhance uniqueness for VP tokens
+restriction UniqueTokenContent:
+  "All #i #j userid1 userid2 token.
+    HolderPresent(userid1, token)@i &
+    HolderPresent(userid2, token)@j
+    ==> #i = #j & userid1 = userid2"
+
+rule MBVerifyPresentation[color=#f4c2c2]:
+  let VP = <senc(VP_content, envelope_key), envelope_key_encrypted>
+      VP_content = <<digest, signature>, disclosure>
+      envelope_key_encrypted = aenc(envelope_key, pk(skV))
+  in
+  [ St_MF_PresentReq($Verifier, openid, appid)
+  , JSAPI_In('PresentVP', appid, <UserName, VP>)
+  , !MLTK($Verifier, appid, skV)
+  , !MPK($Issuer, IssueID, pkI)
+  , !TEEPK($Holder, userid, pkH) ]
+--[ Eq(checksign(proof, <<digest, signature>, disclosure>, pkH), true)
+  , Eq(checksign(signature, digest, pkI), true)
+  , Substring(hash(disclosure), digest)
+  , LPresentationVerify($Verifier, appid, <<digest, signature>, disclosure>, VP_content)
+  , GetRights(UserName)
+  , PassVerify(appid, VP)
+  , TokenVerify(appid, VP) ]->
+  [ ]
+
+// Add token verification restriction
+restriction TokenVerifyOnce:
+  "All #i #j appid token.
+    TokenVerify(appid, token)@i & TokenVerify(appid, token)@j
+    ==> #i = #j"
+
+rule StoreTokenFact:
+  [ Fr(~tokenId), In(Presentation) ]
+  -->
+  [ !VPTokenFact(~tokenId, Presentation) ]
+
+rule ValidateTokenPresentation[color=#6495ed]:
+  let VP_token = <senc(VP_content, envelope_key), envelope_key_encrypted>
+      VP_content = <payload, proof>
+      payload = <Issuer_signed_JWT, disclosure>
+  in
+  [ !VPTokenFact(tokenId, VP_token)
+  , !TEEPK($Holder, userid, pkH) ]
+--[ ValidToken(tokenId, VP_token)
+  , TokenOwner(userid, tokenId)
+  , TokenValidated(tokenId, VP_content) ]->
+  [ ]
+
+// Add token validation restriction
+restriction TokenValidateOnce:
+  "All #i #j tokenId content.
+    TokenValidated(tokenId, content)@i &
+    TokenValidated(tokenId, content)@j
+    ==> #i = #j"
+
+// Add token validation restriction
+restriction TokenOwnership:
+  "All #i #j userid1 userid2 tokenId.
+    TokenOwner(userid1, tokenId)@i & TokenOwner(userid2, tokenId)@j
+    ==> #i = #j & userid1 = userid2"
+
+// Add token verification sequence restriction 
+restriction TokenValidateVerify:
+  "All #i appid token.
+    TokenVerify(appid, token)@i
+    ==> Ex tokenId #j. ValidToken(tokenId, token)@j & #j < #i"
+
+/*
+lemma Executability:
+  exists-trace
+  "Ex issuer appI verifier appV userid lifeTime authCode
+      cred VCdata payload ShowReq VP #t0 #t1 #t2 #t3 #t4 #t5 #t6 #t7.
+      LIssurerAuthCodeRequest(issuer, appI)@t0
+    & LAuthCodeGenerate(userid, lifeTime, authCode)@t1
+    & LMFGetAuthCode(issuer, appI, authCode)@t2
+    & LCredentialIssurance(issuer, appI, VCdata)@t3
+    & LSuperAppStoreVC(userid, VCdata, cred)@t4
+    & LVerifierShowPreReq(verifier, appV, ShowReq)@t5
+    & LHolderPresentVP(userid, appV, VP)@t6
+    & LPresentationVerify(verifier, appV, payload, VP)@t7
+    & (not Ex #x. AdversaryActivity() @ #x)"
+*/
+
+lemma Executability:
+  exists-trace
+  "Ex issuer appI verifier appV userid lifeTime authCode
+      cred VCdata payload ShowReq VP #t0 #t1 #t2.
+      LIssurerAuthCodeRequest(issuer, appI)@t0
+    & LAuthCodeGenerate(userid, lifeTime, authCode)@t1
+    & LMFGetAuthCode(issuer, appI, authCode)@t2
+    & (not Ex #x. AdversaryActivity() @ #x)"
+
+end
